@@ -1,0 +1,39 @@
+[project]
+name = "llm-based-recommender"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "chromadb>=0.5.23",
+    "faiss-cpu>=1.9.0.post1",
+    "fastapi==0.115.7",
+    "ipykernel>=6.29.5",
+
+    "langchain==0.3.15",
+    "langchain-chroma==0.2.0",
+    "langchain-community==0.3.15",
+    "langchain-core==0.3.31",
+    "langchain-experimental>=0.3.4",
+    "langchain-huggingface==0.1.2",
+    "langchain-openai==0.3.2",
+    "langgraph>=0.2.67",
+    "langgraph-cli[inmem]>=0.3.3",
+    "loguru==0.7.3",
+    "nemoguardrails==0.11.0",
+    "numpy==1.26.4",
+    "pandas>=2.1.1",
+    "python-multipart>=0.0.6",
+    "pydantic==2.10.6",
+    "pydantic-settings==2.7.1",
+    "python-dotenv==1.0.1",
+    "rank-bm25==0.2.2",
+    "transformers==4.46.3",
+    "tripo3d>=0.3.12",
+]
+
+[dependency-groups]
+dev = [
+    "pylint>=3.3.7",
+    "ruff>=0.12.4",
+]

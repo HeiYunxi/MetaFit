@@ -1,0 +1,49 @@
+# Python 字节码缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment 虚拟环境
+venv/
+.venv/
+
+# Build & packaging 构建产物
+build/
+dist/
+*.egg-info/
+
+# Environment & secrets
+.env
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# docs
+docs/
+
+# Data — keep CSV (small text, 可版本控制), ignore indexes (large binary)
+backend/data/indexes/
+*.faiss
+# CSV files under backend/data/ are kept — NOT ignored
+# (FashionDataset.csv 261KB, processed_data.csv 52KB)
+
+# Generated 3D models (download cache — 277MB+)
+backend/download/*
+!backend/download/.gitkeep
+*.glb
+*.fbx
+
+# Frontend large media (86MB+ GLB shop scene, MP4 ads)
+frontend/assets/*.glb
+frontend/assets/*.mp4
+
+# Python version (managed by uv)
+.python-version
+
+# LangGraph / LangChain
+.langgraph_api
