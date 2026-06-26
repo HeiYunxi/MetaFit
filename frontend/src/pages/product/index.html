@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MateFit — Product</title>
+  <link rel="stylesheet" href="/app/css/common.css">
+  <link rel="stylesheet" href="/app/pages/product/product.css">
+</head>
+<body>
+  <!-- #app-nav injected by nav.js -->
+  <main class="page-wrap">
+    <a class="back-link" href="/MetaClothesShop">← Back to Store</a>
+    <div id="product-detail" class="product-detail">
+      <div class="muted" style="padding:40px">Loading…</div>
+    </div>
+
+    <section id="similar-section" class="similar-section hidden">
+      <h2>Similar Products</h2>
+      <div class="product-grid" id="similar-grid"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="/app/pages/product/product.js"></script>
+</body>
+</html>

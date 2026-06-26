@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MateFit — Home</title>
+  <link rel="stylesheet" href="/app/css/common.css">
+  <link rel="stylesheet" href="/app/pages/home/home.css">
+</head>
+<body>
+  <!-- #app-nav injected by nav.js -->
+  <section class="hero">
+    <div class="hero-inner">
+      <h1>MateFit · AI Fashion Store</h1>
+      <p>Browse products, AI recommendations, virtual try-on and a 3D fitting room — all in one place.</p>
+      <div class="hero-actions">
+        <a class="btn-primary" href="/fitting-room">👗 Enter 3D Fitting Room</a>
+      </div>
+    </div>
+  </section>
+
+  <main class="page-wrap">
+    <div class="catalog-toolbar">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="Search products, brands, keywords…">
+        <button class="btn-primary" id="search-btn">Search</button>
+      </div>
+      <select id="sort-select" class="select">
+        <option value="newest">Newest</option>
+        <option value="price_asc">Price: Low to High</option>
+        <option value="price_desc">Price: High to Low</option>
+        <option value="name">Name</option>
+      </select>
+    </div>
+
+    <div class="category-chips" id="category-chips"></div>
+
+    <div id="result-meta" class="muted" style="margin:8px 0"></div>
+    <div class="product-grid" id="product-grid"></div>
+    <div class="pagination" id="pagination"></div>
+  </main>
+
+  <script type="module" src="/app/pages/home/home.js"></script>
+</body>
+</html>

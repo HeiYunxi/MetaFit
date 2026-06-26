@@ -72,6 +72,10 @@ class Img2ModelRequest(BaseModel):
         default="tryon_model",
         description="保存文件名前缀，实际文件名由 Tripo SDK 使用 task_id 决定",
     )
+    product_id: int | None = Field(
+        default=None,
+        description="关联的数据库商品 id（可选，用于生成历史展示）",
+    )
     pose_normalization: PoseNormalizationOptions = Field(
         default_factory=PoseNormalizationOptions,
         description="是否在 mesh 阶段前先把任意姿势重绘为 T-pose（约 +5–10s）",

@@ -1,0 +1,37 @@
+.back-link { display: inline-block; margin-bottom: 16px; color: var(--muted); font-size: 14px; }
+.back-link:hover { color: var(--accent); }
+
+.product-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 36px; align-items: start; }
+@media (max-width: 800px) { .product-detail { grid-template-columns: 1fr; } }
+
+.pd-image { width: 100%; border-radius: var(--radius); border: 1px solid var(--border); background: var(--panel-2); aspect-ratio: 3/4; object-fit: cover; }
+.pd-info h1 { font-size: 26px; margin: 0 0 6px; line-height: 1.25; }
+.pd-brand { color: var(--muted); text-transform: uppercase; letter-spacing: .5px; font-size: 13px; margin-bottom: 14px; }
+.pd-price { font-size: 28px; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
+.pd-orig { font-size: 15px; color: var(--muted); text-decoration: line-through; margin-left: 10px; }
+.pd-section { margin-top: 20px; }
+.pd-section h3 { font-size: 14px; color: var(--muted); margin: 0 0 8px; text-transform: uppercase; letter-spacing: .5px; }
+.pd-desc { font-size: 14px; line-height: 1.7; color: var(--text); }
+
+.size-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.size-pill { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); color: var(--text); cursor: pointer; font-size: 13px; }
+.size-pill.active { background: var(--accent); color: #1a1a2e; border-color: var(--accent); font-weight: 700; }
+.size-pill.out { opacity: .4; cursor: not-allowed; text-decoration: line-through; }
+
+.pd-actions { display: flex; gap: 12px; margin-top: 26px; }
+.pd-actions .btn-primary, .pd-actions .btn-secondary { flex: 1; padding: 13px; font-size: 15px; }
+
+.spec-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+.spec-table td { padding: 7px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+.spec-table td:first-child { color: var(--muted); width: 130px; }
+
+.similar-section { margin-top: 48px; }
+.similar-section h2 { font-size: 20px; margin-bottom: 16px; }
+
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--panel); border: 1px solid var(--accent); color: var(--text);
+  padding: 12px 22px; border-radius: 10px; box-shadow: var(--shadow); font-size: 14px;
+  opacity: 0; pointer-events: none; transition: all .25s; z-index: 1100;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }

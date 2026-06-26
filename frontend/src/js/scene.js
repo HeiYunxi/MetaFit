@@ -1,6 +1,5 @@
 // ===== 3D Scene, Rendering, Shop Environment, Model Display =====
 import * as THREE from 'three';
-import { VRButton } from 'three/addons/webxr/VRButton.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import {
@@ -582,21 +581,10 @@ export function loadModel(url) {
       }
 
       renderer.domElement.style.pointerEvents = 'auto';
-      enableVR();
     },
     undefined,
     (e) => console.error('GLB load error:', e)
   );
-}
-
-// ---- VR toggle ----
-export function enableVR() {
-  if (!renderer.xr.enabled) {
-    renderer.xr.enabled = true;
-    document.body.appendChild(VRButton.createButton(renderer));
-    const tb = document.getElementById('vr-toggle-btn');
-    if (tb) tb.style.display = 'none';
-  }
 }
 
 // ---- Red packet 3D object ----

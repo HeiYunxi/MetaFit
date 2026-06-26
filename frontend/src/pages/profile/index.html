@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MateFit — Profile</title>
+  <link rel="stylesheet" href="/app/css/common.css">
+  <link rel="stylesheet" href="/app/pages/profile/profile.css">
+</head>
+<body>
+  <!-- #app-nav injected by nav.js -->
+  <main class="page-wrap">
+    <h1 class="profile-title">Profile</h1>
+    <div class="profile-layout">
+      <aside class="profile-tabs" id="profile-tabs">
+        <button class="ptab active" data-tab="info">👤 Profile</button>
+        <button class="ptab" data-tab="orders">📦 Orders</button>
+        <button class="ptab" data-tab="browse">👀 Browsing</button>
+        <button class="ptab" data-tab="chat">💬 Conversations</button>
+        <button class="ptab" data-tab="gen">✨ Generations</button>
+        <button class="ptab" data-tab="coupons">🎟️ Coupons & Coins</button>
+      </aside>
+      <section class="profile-content" id="profile-content">
+        <div class="muted">Loading…</div>
+      </section>
+    </div>
+  </main>
+
+  <div id="toast" class="toast"></div>
+  <script type="module" src="/app/pages/profile/profile.js"></script>
+</body>
+</html>

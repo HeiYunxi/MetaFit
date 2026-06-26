@@ -172,6 +172,7 @@ def doc_to_product_item(doc) -> dict:
         return _extract_first_number(p) if p else default
 
     return {
+        "product_id": metadata.get("product_id"),
         "product_name": get_val("Product Name", "Product Name", ""),
         "brand": get_val("Brand", "Brand", ""),
         "label": get_val("Label", "Label", ""),

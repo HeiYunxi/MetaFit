@@ -91,6 +91,22 @@ class Settings(BaseSettings):
     # 生成的 GLB 文件保存目录，供 /download/{filename} 接口提供下载
     DOWNLOAD_DIR: str = str(BASE_DIR / "download")
 
+    # ── MySQL（敏感信息统一放 .env，源码不保留真实密码） ─────────────────────────
+    MYSQL_HOST: str = os.environ.get("MYSQL_HOST", "localhost")
+    MYSQL_PORT: int = int(os.environ.get("MYSQL_PORT", "3306"))
+    MYSQL_USER: str = os.environ.get("MYSQL_USER", "root")
+    MYSQL_PASSWORD: str = os.environ.get("MYSQL_PASSWORD", "")
+    MYSQL_DB: str = os.environ.get("MYSQL_DB", "matefit")
+
+    # ── JWT 认证（密钥放 .env，源码仅留开发兜底） ────────────────────────────────
+    JWT_SECRET_KEY: str = os.environ.get(
+        "JWT_SECRET_KEY",
+        "matefit-dev-secret-key-change-in-production",
+    )
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
     # ── 日志 ──────────────────────────────────────────────────────────────────
     LOGGING_LEVEL: str = "INFO"
     LOGGING_FILE: str = str(BASE_DIR / "logs" / "preprocessing.log")

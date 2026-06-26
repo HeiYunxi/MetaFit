@@ -4,33 +4,16 @@ import {
 } from './config.js';
 import { loadModel } from './scene.js';
 import { recommend, tryOn, submitImg2Model, getImg2ModelStatus, fetchTrending } from './api.js';
+import { getCurrentUser, fetchMe } from './auth.js';
+import { fetchCart, addToCartAPI, removeFromCartAPI, clearCartAPI } from './cart-api.js';
+import { fetchBalance, earnCoinsAPI, dailyCheckin, fetchAvailableCoupons, redeemCouponAPI, fetchMyCoupons } from './coins-api.js';
+import { getCoins, addCoins, renderCoinPanelFallback, addToCartFallback } from './fallback-storage.js';
 
 // ---- Shared product state ----
 export let selectedProduct = null;
 export let tryonResult = null;
 export function setSelectedProduct(p) { selectedProduct = p; }
 export function hasSelectedProduct() { return !!selectedProduct; }
-
-// ---- Coins & localStorage helpers ----
-export function getCoins() {
-  const n = parseInt(localStorage.getItem(COINS_KEY) || '0', 10);
-  return isNaN(n) ? 0 : n;
-}
-export function setCoins(n) {
-  try { localStorage.setItem(COINS_KEY, String(Math.max(0, n))); } catch {}
-  updateCoinBadge();
-}
-export function addCoins(n) { setCoins(getCoins() + n); }
-export function loadCoupons() {
-  try { return JSON.parse(localStorage.getItem(COUPONS_KEY) || '[]'); } catch { return []; }
-}
-export function saveCoupons(list) {
-  try { localStorage.setItem(COUPONS_KEY, JSON.stringify(list)); } catch {}
-}
-export function updateCoinBadge() {
-  const el = document.getElementById('coin-balance');
-  if (el) el.textContent = getCoins();
-}
 
 // ---- Chat UI ----
 const chatMessages = document.getElementById('chat-messages');
@@ -47,6 +30,17 @@ export function addUserMessage(text) {
   div.textContent = text;
   chatMessages.appendChild(div);
   scrollToBottom();
+}
+
+/** Replay a past conversation (from generation-history deep link) into the chat panel. */
+export function replayMessages(items) {
+  if (!items || !items.length) return;
+  const welcome = chatMessages.querySelector('.welcome-msg');
+  if (welcome) welcome.remove();
+  items.forEach((msg) => {
+    if (msg.role === 'user') addUserMessage(msg.content || '');
+    else addAIMessage(msg.content || '', []);
+  });
 }
 
 export function addTypingIndicator() {
@@ -273,100 +267,146 @@ export async function loadTrending() {
   }
 }
 
-// ---- Cart ----
-const cart = new Map();
-function productKey(p) {
-  return (p.farfetch_id && String(p.farfetch_id)) || `${p.product_name || ''}|${p.image_url || ''}`;
-}
-export function addToCart(product) {
-  cart.set(productKey(product), product);
-  updateCartBadge();
-  renderCart();
-}
-function removeFromCart(key) {
-  cart.delete(key);
-  updateCartBadge();
-  renderCart();
-}
-function updateCartBadge() {
-  document.getElementById('cart-badge').textContent = cart.size;
-}
-export function renderCart() {
-  const container = document.getElementById('cart-items');
-  if (cart.size === 0) {
-    container.innerHTML = '<div class="cart-empty">Your cart is empty.<br>Add items from Trending or recommendations.</div>';
-    return;
+// ---- Cart (API-driven) ----
+export async function addToCart(product) {
+  try {
+    await addToCartAPI(product.id || 0, null, 1);
+    await refreshCart();
+  } catch (e) {
+    console.warn('Cart API failed, using fallback:', e);
+    // Fallback to localStorage for backward compatibility
+    addToCartFallback(product);
   }
-  container.innerHTML = '';
-  cart.forEach((p, key) => {
-    const priceStr = p.price ? `${p.currency || '$'}${p.price}` : '';
-    const item = document.createElement('div');
-    item.className = 'cart-item';
-    item.innerHTML = `
-      ${p.image_url ? `<img src="${p.image_url}" alt="">` : '<div style="width:48px;height:60px;background:#2a2a4a;border-radius:6px"></div>'}
-      <div class="info">
-        <div class="name">${p.product_name || 'Product'}</div>
-        <div class="price">${priceStr}</div>
-      </div>
-      <div class="actions">
-        <button class="try-btn">Try on</button>
-        <button class="rm-btn">Remove</button>
-      </div>`;
-    item.querySelector('.try-btn').addEventListener('click', () => selectProduct(p));
-    item.querySelector('.rm-btn').addEventListener('click', () => removeFromCart(key));
-    container.appendChild(item);
-  });
-  const clear = document.createElement('button');
-  clear.className = 'cart-clear-btn';
-  clear.textContent = '🗑️ Clear cart';
-  clear.addEventListener('click', () => { cart.clear(); updateCartBadge(); renderCart(); });
-  container.appendChild(clear);
-}
-export function toggleCart() {
-  document.getElementById('cart-panel').classList.toggle('hidden');
 }
 
-// ---- Coins & coupons UI ----
-export function renderCoinPanel() {
-  document.getElementById('coin-panel-balance').textContent = getCoins();
-  const tiersEl = document.getElementById('coupon-tiers');
-  tiersEl.innerHTML = '';
-  COUPON_TIERS.forEach((tier, i) => {
-    const row = document.createElement('div');
-    row.className = 'coupon-tier';
-    const afford = getCoins() >= tier.cost;
-    row.innerHTML = `
-      <div>
-        <div class="info">${tier.label}</div>
-        <div class="cost">${tier.cost} 🪙</div>
-      </div>
-      <button data-tier="${i}" ${afford ? '' : 'disabled'}>Redeem</button>`;
-    row.querySelector('button').addEventListener('click', () => redeemCoupon(i));
-    tiersEl.appendChild(row);
-  });
-  const mine = loadCoupons();
-  const myEl = document.getElementById('my-coupons');
-  if (mine.length) {
-    myEl.innerHTML = '<div style="margin-top:12px;font-size:13px;color:#a78bfa;font-weight:600">Your coupons</div>'
-      + mine.map((c) => `<div class="my-coupon">🎟️ ${c.label} · code <b>${c.code}</b></div>`).join('');
-  } else {
-    myEl.innerHTML = '';
+async function removeFromCart(itemId) {
+  try {
+    await removeFromCartAPI(itemId);
+    await refreshCart();
+  } catch (e) {
+    console.warn('Cart remove API failed');
   }
 }
-function redeemCoupon(i) {
-  const tier = COUPON_TIERS[i];
-  if (getCoins() < tier.cost) return;
-  setCoins(getCoins() - tier.cost);
-  const mine = loadCoupons();
-  mine.push({ label: tier.label, code: tier.code });
-  saveCoupons(mine);
-  renderCoinPanel();
+
+async function clearCart() {
+  try {
+    await clearCartAPI();
+    await refreshCart();
+  } catch (e) {
+    console.warn('Cart clear API failed');
+  }
 }
+
+export async function renderCart() {
+  const container = document.getElementById('cart-items');
+  try {
+    const data = await fetchCart();
+    const items = data.items || [];
+    if (items.length === 0) {
+      container.innerHTML = '<div class="cart-empty">Your cart is empty.<br>Add items from Trending or recommendations.</div>';
+      document.getElementById('cart-badge').textContent = '0';
+      return;
+    }
+    document.getElementById('cart-badge').textContent = items.length;
+    container.innerHTML = '';
+    items.forEach((item) => {
+      const priceStr = item.price ? `${item.currency || '$'}${item.price}` : '';
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+      div.innerHTML = `
+        ${item.image_url ? `<img src="${item.image_url}" alt="">` : '<div style="width:48px;height:60px;background:#2a2a4a;border-radius:6px"></div>'}
+        <div class="info">
+          <div class="name">${item.product_name || 'Product'}</div>
+          <div class="price">${priceStr}</div>
+        </div>
+        <div class="actions">
+          <button class="rm-btn">Remove</button>
+        </div>`;
+      div.querySelector('.rm-btn').addEventListener('click', () => removeFromCart(item.id));
+      container.appendChild(div);
+    });
+    const clear = document.createElement('button');
+    clear.className = 'cart-clear-btn';
+    clear.textContent = '\u{1F5D1}️ Clear cart';
+    clear.addEventListener('click', () => clearCart());
+    container.appendChild(clear);
+  } catch (e) {
+    console.warn('Cart render failed:', e);
+    container.innerHTML = '<div class="cart-empty">Cart unavailable.</div>';
+  }
+}
+
+async function refreshCart() {
+  await renderCart();
+}
+
+// ---- Coins & coupons UI (API-driven) ----
+export async function renderCoinPanel() {
+  try {
+    // Fetch from API
+    const [balanceData, templates, myCoupons] = await Promise.all([
+      fetchBalance(),
+      fetchAvailableCoupons(),
+      fetchMyCoupons(),
+    ]);
+
+    document.getElementById('coin-panel-balance').textContent = balanceData.balance;
+    const tiersEl = document.getElementById('coupon-tiers');
+    tiersEl.innerHTML = '';
+
+    const myC = myCoupons.coupons || [];
+    const tpC = templates.coupons || [];
+
+    tpC.forEach((tier, i) => {
+      const row = document.createElement('div');
+      row.className = 'coupon-tier';
+      const afford = balanceData.balance >= tier.min_order_amount / 10;  // Simplified cost estimation
+      row.innerHTML = `
+        <div>
+          <div class="info">${tier.name}</div>
+          <div class="cost">${tier.discount_type === 'fixed' ? `￥${tier.discount_value}` : `${tier.discount_value*100}% off`}</div>
+        </div>
+        <button data-tier="${i}" data-id="${tier.id}" ${afford ? '' : 'disabled'}>Redeem</button>`;
+      row.querySelector('button').addEventListener('click', () => redeemCouponAPI(tier.id).then(() => renderCoinPanel()).catch(e => alert(e.message)));
+      tiersEl.appendChild(row);
+    });
+
+    const myEl = document.getElementById('my-coupons');
+    if (myC.length) {
+      myEl.innerHTML = '<div style="margin-top:12px;font-size:13px;color:#a78bfa;font-weight:600">Your coupons</div>'
+        + myC.map((c) => `<div class="my-coupon">\u{1F3F7}️ ${c.name} · code <b>${c.code}</b></div>`).join('');
+    } else {
+      myEl.innerHTML = '';
+    }
+  } catch (e) {
+    // Fallback to localStorage
+    console.warn('Coin API failed, using localStorage:', e);
+    renderCoinPanelFallback();
+  }
+}
+
 export function toggleCoinPanel() {
   const panel = document.getElementById('coin-panel');
   const show = panel.classList.contains('hidden');
   panel.classList.toggle('hidden');
   if (show) renderCoinPanel();
+}
+
+export function toggleCart() {
+  document.getElementById('cart-panel').classList.toggle('hidden');
+}
+
+// Keep old coin badge update — use API when possible
+export async function updateCoinBadge() {
+  try {
+    const data = await fetchBalance();
+    const el = document.getElementById('coin-balance');
+    if (el) el.textContent = data.balance;
+  } catch {
+    // Fallback
+    const el = document.getElementById('coin-balance');
+    if (el) el.textContent = getCoins();
+  }
 }
 
 // ---- Ad video ----
@@ -381,11 +421,19 @@ export function openAd() {
   video.currentTime = 0;
   video.muted = false;
   let rewarded = false;
-  video.onended = () => {
+  video.onended = async () => {
     if (rewarded) return;
     rewarded = true;
-    addCoins(AD_REWARD);
-    status.textContent = `🎉 +${AD_REWARD} coins! Balance: ${getCoins()}`;
+    try {
+      // Earn coins via API
+      await earnCoinsAPI(AD_REWARD, 'Ad reward', 'ad');
+      await updateCoinBadge();
+      status.textContent = `\u{1F389} +${AD_REWARD} coins!`;
+    } catch {
+      // Fallback
+      addCoins(AD_REWARD);
+      status.textContent = `\u{1F389} +${AD_REWARD} coins! Balance: ${getCoins()}`;
+    }
   };
   video.onerror = () => {
     status.textContent = 'Video failed to load. Check the ad file in frontend/assets/.';
@@ -433,10 +481,44 @@ export async function runZoneRecommend(query) {
   }
 }
 
-export async function runTryOn() {
+/** Read the saved default full-body photo URL from the current user object. */
+function defaultPhotoUrl() {
+  let m = getCurrentUser()?.body_measurements;
+  if (typeof m === 'string') { try { m = JSON.parse(m); } catch { m = null; } }
+  return m?.body_photo_url || null;
+}
+
+/** Resolve a person image File: prefer a freshly chosen file, else the saved default full-body photo. */
+async function resolvePersonImage() {
   const input = document.getElementById('photo-input');
-  if (!input.files?.length || !selectedProduct?.image_url) {
-    addErrorMessage('Virtual Try-On needs both a selected product and an uploaded photo.');
+  if (input?.files?.length) return input.files[0];
+
+  // In-memory user may be stale (photo uploaded elsewhere) → refresh from server once.
+  let url = defaultPhotoUrl();
+  if (!url) { await fetchMe().catch(() => {}); url = defaultPhotoUrl(); }
+  if (!url) return null;
+
+  const abs = /^https?:\/\//i.test(url)
+    ? url
+    : (API_URL || '').replace(/\/$/, '') + (url.startsWith('/') ? url : '/' + url);
+  try {
+    const r = await fetch(abs, { credentials: 'include' });
+    if (!r.ok) return null;
+    const blob = await r.blob();
+    let ext = (blob.type && blob.type.split('/')[1]) || 'jpg';
+    if (ext === 'jpeg') ext = 'jpg';
+    return new File([blob], `default-body.${ext}`, { type: blob.type || 'image/jpeg' });
+  } catch { return null; }
+}
+
+export async function runTryOn() {
+  if (!selectedProduct?.image_url) {
+    addErrorMessage('Please select a product first, then try it on.');
+    return;
+  }
+  const personImage = await resolvePersonImage();
+  if (!personImage) {
+    addErrorMessage('Upload a full-body photo, or set a default one in your profile to skip this step.');
     return;
   }
   const productName = selectedProduct.product_name || 'selected item';
@@ -444,10 +526,11 @@ export async function runTryOn() {
   addTypingIndicator();
   try {
     const data = await tryOn(
-      input.files[0],
+      personImage,
       selectedProduct.image_url,
       selectedProduct.product_name,
-      selectedProduct.brand
+      selectedProduct.brand,
+      selectedProduct.id
     );
     tryonResult = { url: data.tryon_image_url, base64: data.tryon_image_base64 };
     addAITryOnResultMessage({
@@ -532,6 +615,7 @@ export async function generate3D() {
       animationEnabled,
       animationPreset,
       poseNormalize,
+      productId: selectedProduct?.id,
     });
 
     const result = await pollImg2ModelUntilDone(task_id);
@@ -556,7 +640,7 @@ export async function generate3D() {
     loadModel(url);
     const tier = result.animation?.glb_url ? 'animated'
       : (result.rig?.glb_url ? 'rigged' : 'static');
-    setStageProgress(result.stage, 100, `Model loaded (${tier}). Enter VR to view.`);
+    setStageProgress(result.stage, 100, `Model loaded (${tier}). Walk to the 3D Showcase zone to view.`);
   } catch (e) {
     setStageProgress('mesh', 100, 'Error: ' + e.message);
   } finally {

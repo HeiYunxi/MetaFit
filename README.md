@@ -6,583 +6,531 @@
 
 ---
 
-<h1 id="english" align="center">🛍️ LLM-Based E-Commerce Fashion Recommender</h1>
+<h1 id="english" align="center">MateFit — AI Fashion E-Commerce Platform</h1>
 
-<p align="center"><strong>AI-powered fashion recommendation system leveraging LLMs, RAG, and immersive 3D technology for next-generation shopping experiences.</strong></p>
+<p align="center"><strong>LLM-powered fashion recommendations, virtual try-on, image-to-3D, and an immersive 3D fitting room — built for COMP5925.</strong></p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12-blue?logo=python" alt="Python">
   <img src="https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi" alt="FastAPI">
-  <img src="https://img.shields.io/badge/LangGraph-Workflow-7c3aed" alt="LangGraph">
-  <img src="https://img.shields.io/badge/GPT--4o-LLM-00a67e" alt="GPT-4o">
-  <img src="https://img.shields.io/badge/WebXR-Three.js-green" alt="WebXR">
+  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white" alt="MySQL">
+  <img src="https://img.shields.io/badge/LangGraph-RAG-7c3aed" alt="LangGraph">
+  <img src="https://img.shields.io/badge/Three.js-3D-000000?logo=threedotjs" alt="Three.js">
 </p>
 
 ---
 
-## 🎯 Project Overview
+## Project Overview
 
-This project is a **Retrieval-Augmented Generation (RAG) chatbot** designed for **fashion e-commerce**. It provides **personalized recommendations, multi-turn conversations, virtual try-on, image-to-3D generation**, and an **immersive WebXR 3D storefront** — a complete end-to-end AI shopping assistant.
+**MateFit** is an end-to-end AI fashion shopping platform. Users browse a product catalog, chat with an AI stylist (RAG), try clothes virtually, generate 3D models, and explore everything inside a **desktop 3D fitting room**. Merchants can upload products and trigger vector index rebuilds from a dedicated portal.
 
-> **Core idea:** Use LLMs as a shopping guide, vector search for product retrieval, and image/3D generation to let users **"see themselves wearing it."**
+> **Core idea:** Use LLMs as a shopping guide, hybrid vector retrieval for product matching, and image/3D generation so users can *see themselves wearing it*.
 
-Built with **FastAPI, LangGraph, FAISS, ChromaDB, GPT-4o, Gemini-2.5, Tripo3D, and Three.js/WebXR**.
+**Stack:** FastAPI · LangGraph · FAISS · ChromaDB · MySQL · GPT-4o · Gemini-2.5 · Tripo3D · Three.js
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 | # | Feature | Description |
 |---|---------|-------------|
-| 01 | **AI Fashion Recommendations** | Natural language → smart product matching with LLM-generated reasoning |
-| 02 | **Multi-Turn Conversation** | Context-aware follow-up queries ("in red", "cheaper") via Query Rewrite |
-| 03 | **Hybrid Retrieval** | FAISS (semantic) + BM25 (keyword) + ChromaDB Self-Query (metadata) + Cross-Encoder (rerank) |
-| 04 | **Topic Guard** | LLM classifier filters off-topic queries, keeping the system focused on fashion |
-| 05 | **Virtual Try-On** | Upload a photo + select a garment → AI-generated try-on result via Gemini-2.5-flash-image |
-| 06 | **Image-to-3D** | Try-on result → GLB 3D model via Tripo3D (pose→mesh→rig→animation pipeline) |
-| 07 | **WebXR 3D Storefront** | Immersive 3D clothing shop with first-person controls, zone interactions, and VR support |
-| 08 | **REST API** | FastAPI-powered endpoints with Swagger docs at `/docs` |
+| 01 | **Product catalog** | Browse, filter, and search products (Farfetch seed data + merchant uploads) |
+| 02 | **AI recommendations** | Multi-turn RAG chat with query rewrite, topic guard, hybrid retrieval, reranking |
+| 03 | **Virtual try-on** | Upload a photo → Gemini-2.5-flash-image compositing; results persisted in MySQL |
+| 04 | **Image-to-3D** | Try-on result → Tripo3D GLB pipeline (pose → mesh → rig → animation) |
+| 05 | **3D fitting room** | First-person Three.js shop: chat, try-on, 3D showcase, cart, coins (desktop; VR entry disabled) |
+| 06 | **User accounts** | JWT auth, profile, body photo, browse/try-on/3D/conversation history |
+| 07 | **Commerce** | Session cart, coin rewards, coupon redemption, order checkout |
+| 08 | **Merchant portal** | Product CRUD, size management, background vector reindex |
+| 09 | **Offline eval** | Golden-set retrieval benchmarks (Recall@K, NDCG@K, MRR) — see `backend/eval/` |
 
 ---
 
-## 🏗️ Tech Stack
+## Tech Stack
 
-| Category | Technologies |
-|----------|-------------|
-| **Language** | Python 3.12 |
-| **LLM & Vision** | GPT-4o · Gemini-2.5-flash-image (via LaoZhang API proxy) |
-| **Vector Search** | FAISS · ChromaDB |
-| **Retrieval & Ranking** | BM25 · LangChain · Cross-Encoder |
+| Layer | Technologies |
+|-------|-------------|
+| **Backend** | Python 3.12, FastAPI, aiomysql |
+| **Database** | MySQL 8 (`sql/matefit.sql`) |
+| **LLM / Vision** | GPT-4o, Gemini-2.5-flash-image (LaoZhang API proxy) |
+| **Retrieval** | FAISS, BM25, ChromaDB Self-Query, Cross-Encoder rerank |
 | **Orchestration** | LangGraph (5-node RAG workflow) |
-| **Frontend** | WebXR · Three.js (GLTFLoader + Draco) |
-| **3D Generation** | Tripo3D (image-to-3D GLB) |
-| **Embedding** | sentence-transformers/all-MiniLM-L6-v2 (local, offline) |
-| **Rerank Model** | cross-encoder/ms-marco-MiniLM-L-6-v2 (local) |
-| **Data Source** | Farfetch.com product data (local CSV) |
+| **3D generation** | Tripo3D (async task pipeline) |
+| **Frontend** | Multi-page HTML/JS + shared modules; Three.js fitting room |
+| **Embedding** | `sentence-transformers/all-MiniLM-L6-v2` (local, 384-dim) |
 
 ---
 
-## 📊 Data & Indexing
+## Architecture
 
-### Data Source
-The system uses **Farfetch.com** fashion product data stored locally as CSV (`backend/data/FashionDataset.csv`). Each record includes:
-- Product name, brand, price, currency, discount
-- Image URL, sizes, category label
-- Material composition, washing instructions
-- Farfetch ID, brand style ID
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Frontend (multi-page)                                          │
+│  /MetaClothesShop  /product  /profile  /fitting-room  /merchant │
+└────────────────────────────┬────────────────────────────────────┘
+                             │ REST + JWT + X-Session-Id
+┌────────────────────────────▼────────────────────────────────────┐
+│  FastAPI  —  auth · catalog · cart · coins · coupons · orders   │
+│              recommender · try-on · img2model · merchant        │
+└────────────┬───────────────────────────────┬────────────────────┘
+             │                               │
+     ┌───────▼───────┐               ┌───────▼────────┐
+     │  MySQL        │               │ Vector indexes │
+     │  (products,   │◄── rebuild ──│ FAISS/BM25/    │
+     │   sessions,   │               │ ChromaDB       │
+     │   history…)   │               └────────────────┘
+     └───────────────┘
+```
 
-> ⚠️ The current dataset is **static** (pre-collected). Future plans include connecting to live merchant data or integrating with other e-commerce platform APIs.
-
-### Indexing Pipeline
-1. **Preprocess** — Normalize columns, expand size fields into boolean metadata
-2. **Embed** — Generate 384-dim vectors via `all-MiniLM-L6-v2` (runs locally)
-3. **Build Indexes** — FAISS + BM25 + ChromaDB + Cross-Encoder (all stored in `backend/data/indexes/`)
+**Data flow:** MySQL is the single source of truth for products. Run `rebuild_index_from_db.py` (or merchant reindex) to sync Chroma/FAISS/BM25 from the database.
 
 ---
 
-## 🔄 Recommendation Flow (LangGraph)
+## Recommendation Flow (LangGraph)
 
 ```
-User Query
-  → ① query_rewrite     — Rewrite follow-up queries using conversation history
-  → ② check_topic        — Guard: is this fashion-related? (Yes/No)
-  → ③ self_query_retrieve — LLM → structured filters → ChromaDB metadata search
-       ├─ success → ⑤ rag_recommender
-       └─ empty   → ④ ranker (FAISS + BM25 + Cross-Encoder fallback)
-                         → ⑤ rag_recommender
-  → Final: product list + LLM-generated recommendation
-```
-
-Each node has a single responsibility and can be independently replaced, debugged, or extended.
-
----
-
-## 🖥️ Frontend — WebXR 3D Storefront
-
-The frontend is a **single-page Three.js application** served by FastAPI at `/MetaClothesShop`.
-
-### Architecture
-```
-index.html
-├── Chat Panel        — Natural language query + recommendation cards + trending strip
-├── 3D Viewport       — Three.js renderer (WebGLRenderer + ACES tone mapping)
-├── Try-On Panel      — Photo upload + virtual try-on trigger
-├── Model Panel       — Image-to-3D generation with stage progress (pose→mesh→rig→anim)
-├── Cart Panel        — Shopping cart with add/remove/clear
-└── Coin Panel        — Rewards system (ad video → coins → coupons)
-```
-
-### Scene Management (`scene.js`)
-- Loads `ClothesShop_optimized.glb` (86MB, Draco-compressed)
-- Procedural sky dome with gradient shader (falls back to `/assets/sky.jpg`)
-- PBR environment map generation for reflections
-- Material repair pipeline: untextured meshes → warm beige tones
-- Collision detection, walkable zones, obstacle boundaries
-
-### First-Person Controls (`player.js`)
-- WASD / Arrow keys movement with per-axis collision
-- Mouse drag for look rotation (yaw/pitch)
-- Height-aware floor detection (tabletop-safe movement)
-- 6 interaction zones: Womenswear, Menswear, Kidswear, Lounge, Fitting Room, 3D Showcase
-
-### User Interaction Flow
-```
-Open /MetaClothesShop
-  → Download & render 3D shop scene (GLB)
-  → Spawn at entry position
-  → Free roam (WASD + mouse)
-  → Chat query / Browse trending / Walk into zones
-  → Select product → Add to cart / Virtual try-on
-  → Upload photo → Generate try-on → Generate 3D model
-  → View 360° rotation → Enter VR mode
-```
-
-### System Processing Flow (End-to-End)
-```
-User types query ("Woman dress under $50")
-  → POST /recommend {question}
-  → LangGraph: query_rewrite → check_topic → self_query/ranker → RAG
-  → Return {answer, products[]}
-  → Render recommendation cards (Markdown → HTML)
-
-User selects product + uploads photo
-  → POST /try-on (multipart: person_image + product_image_url)
-  → Gemini-2.5-flash-image generates try-on result
-  → Return {tryon_image_url}
-  → Display result in chat
-
-User clicks "Generate 3D Model"
-  → POST /img2model/submit (async)
-  → Tripo3D pipeline: pose_normalize → mesh → rig → animation
-  → Poll GET /img2model/status/{id} every 2.5s
-  → Load GLB via glTFast → 360° auto-rotation → VR viewing
+User query
+  → ① query_rewrite      — Rewrite follow-ups using conversation history
+  → ② check_topic         — Guard: fashion-related? (Yes/No)
+  → ③ self_query_retrieve — LLM → structured filters → ChromaDB
+       ├─ hits  → ⑤ rag_recommender
+       └─ empty → ④ ranker (FAISS + BM25 + Cross-Encoder) → ⑤ rag_recommender
+  → Product list + LLM recommendation text
 ```
 
 ---
 
-## 📡 API Endpoints
+## Frontend Pages
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/recommend/` | Multi-turn fashion recommendation (RAG) |
-| `POST` | `/try-on` | Virtual try-on (person photo + garment image) |
-| `POST` | `/img2model/` | Image-to-3D (synchronous, legacy) |
-| `POST` | `/img2model/submit` | Image-to-3D (async, with stage progress) |
-| `GET` | `/img2model/status/{id}` | Poll async 3D task status |
-| `GET` | `/trending` | Trending/hot products |
-| `GET` | `/download/{filename}` | Download generated GLB models |
-| `GET` | `/health` | Health check |
-| `GET` | `/docs` | Swagger interactive API docs |
+| URL | Page |
+|-----|------|
+| `/` or `/MetaClothesShop` | Home — product grid, categories, search |
+| `/product?id=` | Product detail, add to cart, link to fitting room |
+| `/profile` | Account, body photo, orders, history (browse / try-on / 3D / chat) |
+| `/fitting-room` | 3D shop + AI chat + try-on + 3D model viewer |
+| `/merchant` | Merchant dashboard (role `merchant` or `admin`) |
 
-Visit **http://localhost:8000/docs** after starting the API.
+The fitting room loads `ClothesShop_optimized.glb`, supports WASD + mouse look, zone-based recommendations, cart/coins panels, and 360° model rotation in the **3D Showcase** zone. **Headset VR entry is currently disabled** (not yet validated).
 
 ---
 
-## 🛠️ Project Structure
+## API Endpoints (summary)
+
+| Area | Examples |
+|------|----------|
+| **Auth** | `POST /auth/register`, `/auth/login`, `/auth/refresh` |
+| **Catalog** | `GET /catalog/products`, `POST /catalog/{id}/view` |
+| **Recommend** | `POST /recommend/` |
+| **Try-on** | `POST /try-on` |
+| **3D** | `POST /img2model/submit`, `GET /img2model/status/{id}` |
+| **Cart / Orders** | `GET/POST /cart`, `POST /orders` |
+| **Coins / Coupons** | `GET /coins/balance`, `POST /coupons/redeem` |
+| **User** | `GET /users/me`, `/users/me/history/*` |
+| **Merchant** | `GET/POST /merchant/products`, `POST /merchant/reindex` |
+| **Misc** | `GET /trending`, `/health`, `/docs` |
+
+Full interactive docs: **http://localhost:8000/docs**
+
+---
+
+## Project Structure
 
 ```
-llm-based-recommender/
-├── backend/                 # Backend (API, recommendation engine, data)
+MateFit/
+├── backend/
 │   ├── src/
-│   │   ├── api/             # FastAPI entry & routers
-│   │   ├── recommender/     # LangGraph recommendation workflow
-│   │   ├── indexing/        # Offline index building scripts
-│   │   ├── cstImg/          # Virtual try-on (image-to-image)
-│   │   ├── img2model/       # Image-to-3D (Tripo3D)
-│   │   ├── util/            # Image processing utilities
-│   │   └── config.py        # Global configuration
-│   ├── data/                # Dataset & offline indexes
-│   └── download/            # Generated GLB model cache
-├── frontend/                # WebXR frontend
-│   ├── assets/              # Static resources (GLB, images, video)
-│   └── src/                 # WebXR app (index.html + css/js modules)
-├── docs/                    # Documentation & meeting materials
-├── pyproject.toml           # Project dependencies
-└── .env.example             # Environment variable template
+│   │   ├── api/           # FastAPI routers, auth middleware
+│   │   ├── recommender/   # LangGraph RAG workflow
+│   │   ├── indexing/      # Offline index builders
+│   │   ├── services/      # Auth, vector index service
+│   │   ├── cstImg/        # Virtual try-on
+│   │   ├── img2model/     # Image-to-3D (Tripo3D)
+│   │   ├── database.py    # MySQL pool
+│   │   └── config.py
+│   ├── scripts/
+│   │   ├── apply_schema.py          # Apply sql/matefit.sql
+│   │   ├── import_products_to_db.py # CSV → MySQL
+│   │   ├── rebuild_index_from_db.py # MySQL → vector indexes
+│   │   └── run_rec_eval.py          # Retrieval evaluation
+│   ├── eval/              # Golden set + results
+│   └── data/              # CSV dataset + indexes/
+├── frontend/
+│   ├── assets/            # GLB, sky, ad video
+│   └── src/
+│       ├── pages/         # home, product, profile
+│       ├── fitting-room/  # 3D fitting room entry
+│       ├── merchant/      # Merchant portal
+│       ├── shared/        # Auth, API clients, nav
+│       └── js/            # Three.js scene modules
+├── sql/matefit.sql        # Complete MySQL schema
+├── .env.example
+└── pyproject.toml
 ```
 
 ---
 
-## 🔧 Setup & Installation
+## Setup & Installation
 
 ### Prerequisites
-- Python **3.12+**
-- [`uv`](https://github.com/astral-sh/uv) package manager
 
-### 1. Clone & Setup Environment
+- Python **3.12+**
+- MySQL **8.0+**
+- [`uv`](https://github.com/astral-sh/uv) (recommended)
+
+### 1. Clone & configure
+
 ```bash
 git clone <repo-url>
-cd llm-based-recommender
-cp .env.example .env    # Then fill in your API keys
+cd MateFit
+cp .env.example .env   # fill in API keys and MySQL credentials
 ```
 
-### 2. Key Environment Variables
+### 2. Environment variables
 
 | Variable | Purpose |
 |----------|---------|
-| `LAOZHANG_GPT_API_KEY` | LLM calls (recommendation, topic check, query rewrite) |
-| `LAOZHANG_IMAGE_API_KEY` | Virtual try-on (image-to-image) |
-| `TRIPO_API_KEY` | Image-to-3D model generation |
+| `LAOZHANG_GPT_API_KEY` | LLM (recommendation, query rewrite, topic guard) |
+| `LAOZHANG_IMAGE_API_KEY` | Virtual try-on (Gemini image API) |
+| `TRIPO_API_KEY` | Image-to-3D generation |
+| `MYSQL_HOST/PORT/USER/PASSWORD/DB` | MySQL connection |
+| `JWT_SECRET_KEY` | Access/refresh token signing |
 
-### 3. Install Dependencies
+### 3. Install dependencies
+
 ```bash
 uv python install
 uv sync --all-extras
 ```
 
-### 4. Build Indexes (only if `backend/data/indexes/` is missing)
-```powershell
-# PowerShell
-$env:PYTHONPATH = "backend"
-uv run python -m src.indexing.embedding
-```
+### 4. Database & product data
+
 ```bash
-# Linux / macOS
-export PYTHONPATH=backend
-uv run python -m src.indexing.embedding
+# Create schema (idempotent)
+python backend/scripts/apply_schema.py
+
+# Import Farfetch CSV into MySQL (first time)
+python backend/scripts/import_products_to_db.py
+
+# Build vector indexes from MySQL
+python backend/scripts/rebuild_index_from_db.py
 ```
 
-### 5. Start the Server
+> If `backend/data/indexes/` already exists from a previous CSV-only setup, you can skip import and run rebuild after schema is applied.
+
+### 5. Start the server
+
 ```powershell
-# PowerShell
-$env:PYTHONPATH = "backend"
+# PowerShell — run from backend/
+cd backend
+$env:PYTHONPATH = "."
 uvicorn src.api.main:app --host 0.0.0.0 --port 8000
 ```
+
 ```bash
 # Linux / macOS
-export PYTHONPATH=backend
+cd backend
+export PYTHONPATH=.
 uvicorn src.api.main:app --host 0.0.0.0 --port 8000
 ```
 
-### 6. Open the App
-- **WebXR Storefront:** http://localhost:8000/MetaClothesShop
-- **API Docs:** http://localhost:8000/docs
-- **Health Check:** http://localhost:8000/health
+### 6. Open the app
+
+| Page | URL |
+|------|-----|
+| Home | http://localhost:8000/MetaClothesShop |
+| Fitting room | http://localhost:8000/fitting-room |
+| Profile | http://localhost:8000/profile |
+| Merchant | http://localhost:8000/merchant |
+| API docs | http://localhost:8000/docs |
+
+### 7. Run retrieval evaluation (optional)
+
+```bash
+python backend/scripts/run_rec_eval.py
+# See backend/eval/README.md for baselines and metrics
+```
 
 ---
 
-## 🎯 Design Highlights
+## Design Highlights
 
-1. **Multi-Route Retrieval + Reranking** — FAISS (semantic) + BM25 (keyword) + Self-Query (structured filters) + Cross-Encoder (reranking) for complementary accuracy
-2. **True Multi-Turn Dialogue** — Query Rewrite reconstructs full intent from conversational follow-ups, not just history concatenation
-3. **Modular Workflow** — LangGraph breaks recommendation into observable, replaceable nodes for easy debugging and extension
-4. **End-to-End Experience** — Text recommendation → virtual try-on → 3D model → immersive VR viewing
-5. **Local + Cloud Hybrid** — Embedding and reranking run locally (low cost, low latency); only LLM dialogue and image/3D generation use cloud APIs
-
----
-
-## ⚠️ Current Limitations
-
-| Issue | Description |
-|-------|-------------|
-| **External API Dependency** | GPT-4o, Gemini, Tripo3D rely on third-party services — cost and latency are not fully controllable |
-| **Static Dataset** | Farfetch data is pre-collected; no live merchant API integration yet |
-| **WebXR POC Stage** | Frontend interaction UX is still being refined |
-| **Embedding Model** | `all-MiniLM-L6-v2` is a general-purpose model (384-dim); domain-specific fashion models would improve accuracy |
-| **No Personalization** | Recommendations are query-based only; user profiling and feedback loops not yet implemented |
+1. **Hybrid retrieval + reranking** — FAISS + BM25 + Self-Query + Cross-Encoder for robust fashion search
+2. **Multi-turn dialogue** — Query rewrite reconstructs intent from conversational follow-ups
+3. **DB-backed catalog** — Products, sessions, try-on/3D history, orders persisted in MySQL
+4. **Modular LangGraph** — Each RAG node is independently replaceable and observable
+5. **End-to-end demo loop** — Browse → chat → try-on → 3D model → cart → checkout
 
 ---
 
-## 🚀 Future Work
+## Current Limitations
 
-- 🔹 **Fine-tune LLMs** on fashion domain data to reduce closed-source API dependency
-- 🔹 **Multi-language support** (Chinese, Japanese, etc.)
-- 🔹 **Cloud deployment** (AWS/GCP with auto-scaling)
-- 🔹 **Personalized recommendations** using user behavior history and preferences
-- 🔹 **Evaluation framework** (NDCG, MRR, user satisfaction metrics)
-- 🔹 **Live data integration** — connect to real merchant/e-commerce platform APIs
-- 🔹 **Enhanced VR experience** — full virtual fitting room with social shopping
+| Issue | Notes |
+|-------|-------|
+| External API dependency | GPT-4o, Gemini, Tripo3D — cost and latency vary |
+| Small catalog | ~100+ products; eval uses rule-based relevance labels |
+| Session-scoped cart | Cart binds to `session_id`, not a unified user-level cart |
+| JWT default secret | Change `JWT_SECRET_KEY` before any public deployment |
 
 ---
 
-<h1 id="chinese" align="center">🛍️ 基于大语言模型的时尚电商推荐系统</h1>
+## Future Work
 
-<p align="center"><strong>融合 LLM、RAG 与沉浸式 3D 技术的 AI 导购系统，打造下一代购物体验。</strong></p>
+- Human-labeled golden set and user study for thesis evaluation
+- WebXR / Quest support after QA on desktop 3D experience
+- User-level cart merge and browse-history backfill on login
+- Domain-specific embedding model for fashion retrieval
+- Live merchant API integration beyond static Farfetch seed data
+
+---
+
+<h1 id="chinese" align="center">MateFit — AI 时尚电商平台</h1>
+
+<p align="center"><strong>融合 LLM 推荐、虚拟试穿、图生 3D 与沉浸式 3D 试衣间的 COMP5925 毕业设计项目。</strong></p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12-blue?logo=python" alt="Python">
   <img src="https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi" alt="FastAPI">
-  <img src="https://img.shields.io/badge/LangGraph-Workflow-7c3aed" alt="LangGraph">
-  <img src="https://img.shields.io/badge/GPT--4o-LLM-00a67e" alt="GPT-4o">
-  <img src="https://img.shields.io/badge/WebXR-Three.js-green" alt="WebXR">
+  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white" alt="MySQL">
+  <img src="https://img.shields.io/badge/LangGraph-RAG-7c3aed" alt="LangGraph">
+  <img src="https://img.shields.io/badge/Three.js-3D-000000?logo=threedotjs" alt="Three.js">
 </p>
 
 ---
 
-## 🎯 项目概述
+## 项目概述
 
-这是一个面向**时尚电商**场景的 **AI 导购系统**。将「检索增强生成(RAG)」「多轮对话」「虚拟试穿」「图生 3D」「WebXR 沉浸式展示」串成一条完整链路，模拟用户从「描述需求 → 得到推荐 → 试穿 → 3D/VR 查看」的购物体验。
+**MateFit** 是一条完整的 AI 时尚购物链路：商品浏览 → AI 对话推荐 → 虚拟试穿 → 图生 3D → 3D 试衣间体验，并支持用户账户、购物车、金币优惠券、订单，以及商户上架与向量索引重建。
 
-> **核心思路：** 用大模型当导购，用向量检索找货，用图像/3D 生成让用户**「看见自己穿上」**。
+> **核心思路：** 大模型当导购，混合向量检索找货，图像/3D 生成让用户「看见自己穿上」。
 
-技术栈：**FastAPI、LangGraph、FAISS、ChromaDB、GPT-4o、Gemini-2.5、Tripo3D、Three.js/WebXR**。
+**技术栈：** FastAPI · LangGraph · FAISS · ChromaDB · MySQL · GPT-4o · Gemini-2.5 · Tripo3D · Three.js
 
 ---
 
-## ✨ 核心功能
+## 核心功能
 
 | # | 功能 | 说明 |
 |---|------|------|
-| 01 | **AI 时尚推荐** | 自然语言描述需求 → 智能匹配商品 + LLM 生成推荐理由 |
-| 02 | **多轮对话理解** | 上下文追问（"要红色的""便宜点的"），Query Rewrite 自动改写为完整查询 |
-| 03 | **混合检索** | FAISS（语义）+ BM25（关键词）+ ChromaDB Self-Query（元数据过滤）+ Cross-Encoder（精排） |
-| 04 | **话题守卫** | LLM 分类器拦截非时尚话题，聚焦导购场景 |
-| 05 | **虚拟试穿** | 上传人物照 + 选中商品图 → Gemini-2.5 合成试穿效果，中英双语 Prompt |
-| 06 | **图生 3D** | 试穿图 → Tripo3D 生成 GLB 三维模型（pose→mesh→rig→animation 四阶段流水线） |
-| 07 | **WebXR 3D 商店** | 沉浸式 3D 服装店，第一人称漫游 + 区域交互推荐 + VR 模式 |
-| 08 | **REST API** | FastAPI 标准化接口，提供 Swagger 在线文档（`/docs`） |
+| 01 | **商品目录** | 浏览、筛选、搜索（Farfetch 种子数据 + 商户上传） |
+| 02 | **AI 推荐** | 多轮 RAG：查询改写、话题守卫、混合检索、Cross-Encoder 精排 |
+| 03 | **虚拟试穿** | 上传全身照 → Gemini 合成；结果写入 MySQL |
+| 04 | **图生 3D** | 试穿图 → Tripo3D GLB（pose → mesh → rig → animation） |
+| 05 | **3D 试衣间** | Three.js 第一人称商店：对话、试穿、3D 展示、购物车、金币（桌面端；VR 入口已关闭） |
+| 06 | **用户系统** | JWT 登录、个人资料、默认试衣照、浏览/试穿/3D/对话历史 |
+| 07 | **交易闭环** | Session 购物车、金币激励、优惠券兑换、下单 |
+| 08 | **商户后台** | 商品 CRUD、尺码管理、后台向量重建 |
+| 09 | **离线评估** | Golden set 检索指标（Recall@K、NDCG@K、MRR）— 见 `backend/eval/` |
 
 ---
 
-## 🏗️ 技术栈
+## 技术栈
 
 | 层次 | 技术 |
 |------|------|
-| **编程语言** | Python 3.12 |
-| **LLM / 图像 API** | GPT-4o · Gemini-2.5-flash-image（经老张 API 代理） |
-| **向量检索** | FAISS · ChromaDB |
-| **检索与排序** | BM25 · LangChain · Cross-Encoder |
-| **流程编排** | LangGraph（五节点 RAG 工作流） |
-| **前端** | WebXR · Three.js（GLTFLoader + Draco 压缩） |
-| **3D 生成** | Tripo3D（图生 3D GLB） |
-| **嵌入模型** | sentence-transformers/all-MiniLM-L6-v2（本地运行，384 维） |
-| **重排模型** | cross-encoder/ms-marco-MiniLM-L-6-v2（本地运行） |
-| **数据来源** | Farfetch.com 时尚商品数据（本地 CSV） |
+| **后端** | Python 3.12、FastAPI、aiomysql |
+| **数据库** | MySQL 8（`sql/matefit.sql`） |
+| **LLM / 图像** | GPT-4o、Gemini-2.5-flash-image（老张 API） |
+| **检索** | FAISS、BM25、ChromaDB Self-Query、Cross-Encoder |
+| **编排** | LangGraph 五节点 RAG 工作流 |
+| **3D 生成** | Tripo3D 异步流水线 |
+| **前端** | 多页面 HTML/JS + Three.js 试衣间 |
+| **嵌入** | `all-MiniLM-L6-v2`（本地 384 维） |
 
 ---
 
-## 📊 数据与索引
+## 系统架构
 
-### 数据来源
-系统使用 **Farfetch.com** 时尚商品数据，以 CSV 格式存储在本地（`backend/data/FashionDataset.csv`）。每条记录包含：
-- 商品名称、品牌、价格、货币、折扣
-- 图片 URL、尺码、品类标签
-- 材质成分、洗护说明
-- Farfetch ID、品牌款式 ID
+```
+前端多页面（/MetaClothesShop · /product · /profile · /fitting-room · /merchant）
+        │ REST + JWT + X-Session-Id
+FastAPI（auth · catalog · cart · coins · coupons · orders · recommender · merchant）
+        ├─ MySQL（商品、会话、历史、订单…）← rebuild_index_from_db.py
+        └─ 向量索引（FAISS / BM25 / ChromaDB）
+```
 
-> ⚠️ 当前数据集为**静态数据**（预先采集）。未来计划接入商户实时数据或其他电商平台 API。
-
-### 索引构建流程
-1. **预处理** — 列规范化、尺码字段展开为布尔元数据
-2. **嵌入生成** — `all-MiniLM-L6-v2` 生成 384 维向量（本地运行）
-3. **构建索引** — FAISS + BM25 + ChromaDB + Cross-Encoder（存储在 `backend/data/indexes/`）
+**MySQL 是商品与业务数据的唯一数据源**；向量索引通过脚本或商户后台重建与 DB 同步。
 
 ---
 
-## 🔄 推荐流程（LangGraph）
+## 推荐流程（LangGraph）
 
 ```
 用户查询
-  → ① query_rewrite      — 结合对话历史改写追问（多轮支持）
-  → ② check_topic         — 话题守卫：是否属于时尚推荐？（Yes/No）
-  → ③ self_query_retrieve — LLM → 结构化过滤条件 → ChromaDB 元数据检索
-       ├─ success → ⑤ rag_recommender
-       └─ empty   → ④ ranker（FAISS + BM25 + Cross-Encoder 兜底）
-                         → ⑤ rag_recommender
-  → 最终输出：商品列表 + LLM 生成的推荐理由
-```
-
-每个节点职责单一、可独立替换、可观测调试。
-
----
-
-## 🖥️ 前端 — WebXR 3D 商店
-
-前端是基于 **Three.js** 的单页面应用，由 FastAPI 在 `/MetaClothesShop` 统一托管。
-
-### 模块架构
-```
-index.html
-├── Chat Panel         — 自然语言查询 + 推荐卡片（Markdown 渲染）+ Trending 热门商品
-├── 3D Viewport        — Three.js 渲染器（WebGLRenderer + ACES 色调映射）
-├── Try-On Panel       — 照片上传 + 虚拟试穿触发
-├── Model Panel        — 图生 3D 生成 + 阶段进度展示（pose→mesh→rig→animation）
-├── Cart Panel         — 购物车（添加/移除/清空）
-└── Coin Panel         — 金币积分系统（广告视频 → 金币 → 优惠券兑换）
-```
-
-### 场景管理（`scene.js`）
-- 加载 `ClothesShop_optimized.glb`（86MB，Draco 压缩）
-- 程序化天空球（渐变 Shader，支持 `/assets/sky.jpg` 图片兜底）
-- PBR 环境贴图生成（真实反射）
-- 材质修复：无贴图网格 → 暖色调（米色/奶油色）
-- 碰撞检测、可行走区域、障碍物边界
-
-### 第一人称控制（`player.js`）
-- WASD / 方向键移动（逐轴碰撞检测）
-- 鼠标拖拽环视（偏航/俯仰角）
-- 高度感知地面检测（防止走上桌面）
-- 6 个交互区域：女装区、男装区、童装区、休息区、试衣间、3D 展示区
-
-### 用户交互流程
-```
-打开 /MetaClothesShop
-  → 下载并渲染 3D 店铺场景 (GLB)
-  → 自动定位到入口位置
-  → 自由漫游（WASD + 鼠标）
-  → 聊天查询 / 浏览 Trending / 走进区域
-  → 选中商品 → 加入购物车 / 虚拟试穿
-  → 上传照片 → 生成试穿图 → 生成 3D 模型
-  → 360° 旋转查看 → 进入 VR 模式
-```
-
-### 系统处理流程（端到端）
-```
-用户输入查询（"Woman dress under $50"）
-  → POST /recommend {question}
-  → LangGraph：query_rewrite → check_topic → self_query/ranker → RAG
-  → 返回 {answer, products[]}
-  → 渲染推荐卡片（Markdown → HTML）
-
-用户选中商品 + 上传照片
-  → POST /try-on（multipart：人物照 + 商品图）
-  → Gemini-2.5-flash-image 生成试穿效果
-  → 返回 {tryon_image_url}
-  → 在聊天区展示结果
-
-用户点击 "Generate 3D Model"
-  → POST /img2model/submit（异步提交）
-  → Tripo3D 流水线：pose_normalize → mesh → rig → animation
-  → 每 2.5s 轮询 GET /img2model/status/{id}
-  → 加载 GLB → 360° 自动旋转 → VR 查看
+  → ① query_rewrite      — 结合历史改写追问
+  → ② check_topic         — 话题守卫
+  → ③ self_query_retrieve — ChromaDB 元数据检索
+       ├─ 有结果 → ⑤ rag_recommender
+       └─ 无结果 → ④ ranker（FAISS+BM25+精排）→ ⑤ rag_recommender
+  → 商品列表 + LLM 推荐理由
 ```
 
 ---
 
-## 📡 API 接口
+## 前端页面
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| `POST` | `/recommend/` | 多轮时尚推荐（RAG 主链路） |
-| `POST` | `/try-on` | 虚拟试穿（人物照 + 商品图） |
-| `POST` | `/img2model/` | 图生 3D（同步，向后兼容） |
-| `POST` | `/img2model/submit` | 图生 3D（异步，支持阶段进度查询） |
-| `GET` | `/img2model/status/{id}` | 查询异步 3D 任务状态 |
-| `GET` | `/trending` | 热门/趋势商品 |
-| `GET` | `/download/{filename}` | 下载生成的 GLB 模型文件 |
-| `GET` | `/health` | 健康检查 |
-| `GET` | `/docs` | Swagger 交互式 API 文档 |
+| URL | 说明 |
+|-----|------|
+| `/` 或 `/MetaClothesShop` | 首页 — 商品列表、分类、搜索 |
+| `/product?id=` | 商品详情、加购、跳转试衣间 |
+| `/profile` | 个人中心 — 资料、订单、各类历史 |
+| `/fitting-room` | 3D 试衣间 + AI 对话 + 试穿 + 3D 模型 |
+| `/merchant` | 商户后台（需 `merchant` / `admin` 角色） |
 
-启动后端后，访问 **http://localhost:8000/docs** 可在线调试所有接口。
+试衣间支持 WASD 漫游、区域推荐、购物车/金币面板，在 **3D Showcase** 区域 360° 查看模型。**头显 VR 入口暂未开放**（尚未完成测试）。
 
 ---
 
-## 🛠️ 项目结构
+## API 接口（摘要）
+
+| 模块 | 示例 |
+|------|------|
+| 认证 | `POST /auth/register`、`/auth/login` |
+| 目录 | `GET /catalog/products` |
+| 推荐 | `POST /recommend/` |
+| 试穿 | `POST /try-on` |
+| 3D | `POST /img2model/submit` |
+| 购物车/订单 | `GET/POST /cart`、`POST /orders` |
+| 金币/优惠券 | `GET /coins/balance`、`POST /coupons/redeem` |
+| 用户 | `GET /users/me/history/*` |
+| 商户 | `POST /merchant/products`、`POST /merchant/reindex` |
+
+完整文档：**http://localhost:8000/docs**
+
+---
+
+## 项目结构
 
 ```
-llm-based-recommender/
-├── backend/                 # 后端（API、推荐引擎、数据）
+MateFit/
+├── backend/
 │   ├── src/
-│   │   ├── api/             # FastAPI 入口与路由
-│   │   ├── recommender/     # LangGraph 推荐工作流
-│   │   ├── indexing/        # 离线索引构建脚本
-│   │   ├── cstImg/          # 虚拟试穿（图生图）
-│   │   ├── img2model/       # 图生 3D（Tripo3D）
-│   │   ├── util/            # 图片处理工具
-│   │   └── config.py        # 全局配置
-│   ├── data/                # 数据集与离线索引
-│   └── download/            # 生成的 GLB 模型缓存
-├── frontend/                # WebXR 前端
-│   ├── assets/              # 静态资源（GLB、图片、视频）
-│   └── src/                 # WebXR 应用（index.html + css/js 模块）
-├── docs/                    # 文档与会议材料
-├── pyproject.toml           # 项目依赖
-└── .env.example             # 环境变量模板
+│   │   ├── api/           # FastAPI 路由、认证中间件
+│   │   ├── recommender/   # LangGraph RAG 推荐工作流
+│   │   ├── indexing/      # 离线索引构建脚本
+│   │   ├── services/      # 认证、向量索引服务
+│   │   ├── cstImg/        # 虚拟试穿（图生图）
+│   │   ├── img2model/     # 图生 3D（Tripo3D）
+│   │   ├── database.py    # MySQL 连接池
+│   │   └── config.py      # 全局配置
+│   ├── scripts/
+│   │   ├── apply_schema.py          # 应用 sql/matefit.sql
+│   │   ├── import_products_to_db.py # CSV → MySQL 商品导入
+│   │   ├── rebuild_index_from_db.py # MySQL → 向量索引重建
+│   │   └── run_rec_eval.py          # 检索离线评估
+│   ├── eval/              # Golden set 与评估结果
+│   └── data/              # CSV 数据集与 indexes/
+├── frontend/
+│   ├── assets/            # GLB 场景、天空盒、广告视频等静态资源
+│   └── src/
+│       ├── pages/         # 首页、商品详情、个人中心
+│       ├── fitting-room/  # 3D 试衣间入口页
+│       ├── merchant/      # 商户管理后台
+│       ├── shared/        # 认证、API 客户端、导航组件
+│       └── js/            # Three.js 场景与试衣间逻辑模块
+├── sql/matefit.sql        # MySQL 完整 schema（17 张表）
+├── .env.example           # 环境变量模板
+└── pyproject.toml         # 项目依赖与工具配置
 ```
 
 ---
 
-## 🔧 安装与启动
+## 安装与启动
 
 ### 环境要求
-- Python **3.12+**
-- [`uv`](https://github.com/astral-sh/uv) 包管理器
 
-### 1. 克隆仓库 & 配置环境
+- Python **3.12+**
+- MySQL **8.0+**
+- [`uv`](https://github.com/astral-sh/uv)
+
+### 1. 克隆与配置
+
 ```bash
 git clone <repo-url>
-cd llm-based-recommender
-cp .env.example .env    # 填写你的 API 密钥
+cd MateFit
+cp .env.example .env   # 填写 API Key 与 MySQL 配置
 ```
 
 ### 2. 关键环境变量
 
 | 变量 | 用途 |
 |------|------|
-| `LAOZHANG_GPT_API_KEY` | LLM 调用（推荐对话、话题判断、查询改写） |
-| `LAOZHANG_IMAGE_API_KEY` | 虚拟试穿（图生图） |
-| `TRIPO_API_KEY` | 图生 3D 模型生成 |
+| `LAOZHANG_GPT_API_KEY` | LLM 对话与检索解析 |
+| `LAOZHANG_IMAGE_API_KEY` | 虚拟试穿 |
+| `TRIPO_API_KEY` | 图生 3D |
+| `MYSQL_*` | 数据库连接 |
+| `JWT_SECRET_KEY` | JWT 签名密钥 |
 
 ### 3. 安装依赖
+
 ```bash
 uv python install
 uv sync --all-extras
 ```
 
-### 4. 构建索引（仅当 `backend/data/indexes/` 缺失时需要）
-```powershell
-# PowerShell
-$env:PYTHONPATH = "backend"
-uv run python -m src.indexing.embedding
-```
+### 4. 数据库与商品数据
+
 ```bash
-# Linux / macOS
-export PYTHONPATH=backend
-uv run python -m src.indexing.embedding
+python backend/scripts/apply_schema.py
+python backend/scripts/import_products_to_db.py
+python backend/scripts/rebuild_index_from_db.py
 ```
 
 ### 5. 启动服务
+
 ```powershell
-# PowerShell
-$env:PYTHONPATH = "backend"
+cd backend
+$env:PYTHONPATH = "."
 uvicorn src.api.main:app --host 0.0.0.0 --port 8000
 ```
+
+### 6. 访问应用
+
+| 页面 | 地址 |
+|------|------|
+| 首页 | http://localhost:8000/MetaClothesShop |
+| 试衣间 | http://localhost:8000/fitting-room |
+| 个人中心 | http://localhost:8000/profile |
+| 商户后台 | http://localhost:8000/merchant |
+| API 文档 | http://localhost:8000/docs |
+
+### 7. 推荐评估（可选）
+
 ```bash
-# Linux / macOS
-export PYTHONPATH=backend
-uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+python backend/scripts/run_rec_eval.py
 ```
 
-### 6. 打开应用
-- **WebXR 3D 商店：** http://localhost:8000/MetaClothesShop
-- **API 文档：** http://localhost:8000/docs
-- **健康检查：** http://localhost:8000/health
-
-> Quest 头显访问（同一局域网）：`http://你的电脑IP:8000/MetaClothesShop`
+详见 `backend/eval/README.md`。
 
 ---
 
-## 🎯 设计亮点
+## 设计亮点
 
-1. **多路召回 + 精排** — FAISS（语义）+ BM25（关键词）+ Self-Query（结构化过滤）+ Cross-Encoder（重排），互补提升准确率与鲁棒性
-2. **真·多轮对话** — Query Rewrite 将口语化追问还原为完整意图，而非简单的历史拼接
-3. **模块化流程** — LangGraph 将推荐拆分为可观测、可替换的节点，便于调试与扩展
-4. **端到端体验闭环** — 文本推荐 → 虚拟试穿 → 图生 3D → WebXR/VR 展示，覆盖完整购物链路
-5. **本地 + 云端混合** — 嵌入和重排在本地运行（省钱、低延迟），仅 LLM 对话和图像/3D 生成走云端 API
+1. **多路召回 + 精排** — 语义、关键词、Self-Query、Cross-Encoder 互补
+2. **多轮对话** — Query Rewrite 还原完整购物意图
+3. **数据库驱动** — 商品与行为数据持久化，索引可从 DB 重建
+4. **模块化 LangGraph** — 节点可独立替换与调试
+5. **端到端体验** — 浏览 → 对话 → 试穿 → 3D → 加购 → 下单
 
 ---
 
-## ⚠️ 现存问题
+## 现存限制
 
 | 问题 | 说明 |
 |------|------|
-| **依赖外部 API** | GPT-4o、Gemini、Tripo3D 均依赖第三方服务，成本与延迟不可控，密钥存在额度耗尽风险 |
-| **数据集为静态** | Farfetch 数据为预先采集，尚未接入商户实时 API |
-| **WebXR 前端 POC 阶段** | 交互体验待优化，UI 需进一步完善 |
-| **嵌入模型精度有限** | `all-MiniLM-L6-v2` 为通用模型，时尚领域语义区分不如领域专用模型 |
-| **缺少个性化闭环** | 推荐仅基于单次查询，未利用用户画像、行为历史及反馈信号 |
+| 外部 API 依赖 | GPT、Gemini、Tripo3D 成本与延迟不可控 |
+| 商品规模较小 | 约 100+ SKU；评估采用规则标注 |
+| 购物车按 session | 非用户级统一购物车 |
+| 安全 | 生产环境务必修改 `JWT_SECRET_KEY` |
 
 ---
 
-## 🚀 未来工作
+## 未来工作
 
-- 🔹 **LLM 微调** — 在时尚电商领域数据上微调开源 LLM，减少闭源 API 依赖
-- 🔹 **多语言支持** — 扩展中文、日语等语言的查询理解与推荐生成
-- 🔹 **云端部署** — 迁移至 AWS/GCP，实现自动扩缩容与高可用
-- 🔹 **个性化推荐** — 引入用户画像、浏览历史、购买记录等行为信号
-- 🔹 **评估框架** — 建立 NDCG、MRR、用户满意度等离线/在线评估体系
-- 🔹 **实时数据接入** — 对接真实商户/电商平台 API，替代静态数据集
-- 🔹 **沉浸式 VR 完善** — 实现完整虚拟试衣间与社交购物体验
+- 人工标注 Golden set 与用户实验
+- 桌面 3D 体验稳定后再启用 WebXR
+- 登录后浏览历史回填、用户级购物车合并
+- 时尚领域专用嵌入模型
+- 对接真实商户实时 API
 
 ---
 

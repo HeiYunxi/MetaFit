@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "description": "Rule-based golden queries. Relevance uses product_name / price / brand / sizes from BM25 catalog metadata.",
+  "queries": [
+    { "id": "q01_dress", "query": "summer dress for women", "rules": { "name_contains": "dress" } },
+    { "id": "q02_cheap_dress", "query": "affordable dress under 3500", "rules": { "name_contains": "dress", "price_max": 3500 } },
+    { "id": "q03_jacket", "query": "casual jacket", "rules": { "name_contains": "jacket" } },
+    { "id": "q04_coat", "query": "wool coat winter", "rules": { "name_contains": "coat" } },
+    { "id": "q05_shoes", "query": "leather shoes", "rules": { "name_contains": "shoe" } },
+    { "id": "q06_bag", "query": "designer bag", "rules": { "name_contains": "bag" } },
+    { "id": "q07_top", "query": "cotton top blouse", "rules": { "name_contains": "top" } },
+    { "id": "q08_pants", "query": "tailored trousers pants", "rules": { "name_contains": "trouser" } },
+    { "id": "q09_skirt", "query": "midi skirt", "rules": { "name_contains": "skirt" } },
+    { "id": "q10_luxury", "query": "luxury item over 15000", "rules": { "price_min": 15000 } },
+    { "id": "q11_budget", "query": "budget fashion under 2000", "rules": { "price_max": 2000 } },
+    { "id": "q12_mid_price", "query": "mid range clothing 3000 to 8000", "rules": { "price_min": 3000, "price_max": 8000 } },
+    { "id": "q13_new_season", "query": "new season collection", "rules": { "label_contains": "new season" } },
+    { "id": "q14_hoodie", "query": "hooded sweatshirt", "rules": { "name_contains": "hood" } },
+    { "id": "q15_shirt", "query": "buttoned cotton shirt", "rules": { "name_contains": "shirt" } },
+    { "id": "q16_gown", "query": "evening gown formal dress", "rules": { "name_contains": "gown" } },
+    { "id": "q17_print", "query": "leopard print clothing", "rules": { "name_contains": "leopard" } },
+    { "id": "q18_size_m", "query": "clothes available in size M", "rules": { "size": "m" } },
+    { "id": "q19_brand_prada", "query": "Prada style items", "rules": { "brand_contains": "prada" } },
+    { "id": "q20_runway", "query": "runway fashion pieces", "rules": { "label_contains": "runway" } }
+  ]
+}

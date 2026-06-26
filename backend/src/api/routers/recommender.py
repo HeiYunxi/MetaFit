@@ -7,13 +7,18 @@
 - 把图返回的商品结构规范化成前端更容易消费的 JSON
 """
 
+import json
 import warnings
 from typing import Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, Cookie, Depends, Header, HTTPException, Request, Response
+from fastapi.concurrency import run_in_threadpool
 from loguru import logger
 from pydantic import BaseModel
+
+from src.api.middleware.auth import get_optional_user
+from src.database import execute, fetchval, insert_and_get_id
 
 warnings.filterwarnings("ignore")
 
@@ -48,6 +53,7 @@ def normalize_products(products: list[dict] | None) -> list[dict]:
     for product in products:
         normalized_products.append(
             {
+                "id": product.get("product_id") or product.get("id"),
                 "product_name": product.get("product_name", ""),
                 "brand": product.get("brand", ""),
                 "label": product.get("label", ""),
@@ -96,12 +102,62 @@ def get_or_create_thread_id(
     return new_id
 
 
+async def _persist_conversation(
+    thread_id: str,
+    user: dict | None,
+    question: str,
+    recommendation: str,
+    products: list[dict],
+) -> None:
+    """尽力把一轮对话写入 conversations/messages（失败不影响推荐结果）。"""
+    try:
+        # 1. 确保 sessions 行存在（conversations 外键依赖）
+        await execute(
+            "INSERT INTO sessions (id, user_id, is_active) VALUES (%s, %s, 1) "
+            "ON DUPLICATE KEY UPDATE last_activity_at = CURRENT_TIMESTAMP, "
+            "user_id = COALESCE(user_id, VALUES(user_id))",
+            (thread_id, user["id"] if user else None),
+        )
+        # 2. 计算对话轮次
+        step = await fetchval(
+            "SELECT COUNT(*) FROM conversations WHERE thread_id = %s", (thread_id,)
+        ) or 0
+        # 3. 写 conversation
+        graph_state = json.dumps(
+            {"query": question, "recommendation": recommendation[:2000]},
+            ensure_ascii=False,
+        )
+        conv_id = await insert_and_get_id(
+            "INSERT INTO conversations (session_id, thread_id, graph_state, step) "
+            "VALUES (%s, %s, %s, %s)",
+            (thread_id, thread_id, graph_state, step),
+        )
+        # 4. 写 messages（user + assistant）
+        await execute(
+            "INSERT INTO messages (conversation_id, session_id, role, content) "
+            "VALUES (%s, %s, 'user', %s)",
+            (conv_id, thread_id, question),
+        )
+        meta = json.dumps(
+            {"product_ids": [p.get("id") for p in products if p.get("id")]},
+            ensure_ascii=False,
+        )
+        await execute(
+            "INSERT INTO messages (conversation_id, session_id, role, content, metadata) "
+            "VALUES (%s, %s, 'assistant', %s, %s)",
+            (conv_id, thread_id, recommendation, meta),
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("[recommend] persist conversation failed (non-fatal): %s", exc)
+
+
 @router.post("/", response_model=dict)
-def get_chat_response(
+async def get_chat_response(
     request: Request,
     response: Response,
     body: QuestionRequest,
     thread_id: str = Depends(get_or_create_thread_id),
+    user: dict | None = Depends(get_optional_user),
 ):
     try:
         # 首次访问时把新 thread_id 回写到 cookie，后续请求就能走同一会话上下文。
@@ -109,10 +165,18 @@ def get_chat_response(
             response.set_cookie("thread_id", request.state.new_thread_id)
 
         config = {"configurable": {"thread_id": thread_id}}
-        result = graph_app.invoke({"query": body.question}, config=config)
+        # graph 调用是同步重活，放线程池避免阻塞事件循环。
+        result = await run_in_threadpool(
+            graph_app.invoke, {"query": body.question}, config
+        )
 
         recommendation = result.get("recommendation", "No recommendation found.")
         products = normalize_products(result.get("product_items"))
+
+        await _persist_conversation(
+            thread_id, user, body.question, recommendation, products
+        )
+
         return {
             "question": body.question,
             "thread_id": thread_id,

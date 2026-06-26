@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MateFit — Merchant Portal</title>
+  <link rel="stylesheet" href="/app/css/common.css">
+  <link rel="stylesheet" href="/app/merchant/css/merchant.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <nav id="sidebar">
+      <div class="logo">🏪 MateFit <span style="color:#a78bfa">Merchant</span></div>
+      <ul id="nav-links">
+        <li><a href="#dashboard" class="nav-item active" data-page="dashboard">📊 Dashboard</a></li>
+        <li><a href="#products" class="nav-item" data-page="products">📦 Products</a></li>
+        <li><a href="#orders" class="nav-item" data-page="orders">📋 Orders</a></li>
+        <li style="margin-top:auto">
+          <a href="#" id="rebuild-btn" class="nav-item" style="color:#fbbf24">🔄 Rebuild Index</a>
+        </li>
+        <li><a href="/MetaClothesShop" class="nav-item">🏠 Back to Store</a></li>
+      </ul>
+      <div id="user-info">
+        <span id="merchant-name">Not logged in</span>
+        <button id="logout-btn" style="font-size:11px;color:#f87171;background:none;border:none;cursor:pointer">Logout</button>
+      </div>
+    </nav>
+
+    <!-- Main content -->
+    <main id="content">
+      <!-- Dashboard -->
+      <div id="page-dashboard" class="page active">
+        <h1>Dashboard</h1>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-products">—</div>
+            <div class="stat-label">Active Products</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-orders">—</div>
+            <div class="stat-label">Total Orders</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-revenue">—</div>
+            <div class="stat-label">Revenue</div>
+          </div>
+        </div>
+        <div style="margin-top:24px">
+          <button id="new-product-btn" class="btn-primary">+ New Product</button>
+          <button id="rebuild-btn2" class="btn-secondary" style="margin-left:8px">\u{1F504} Rebuild Search Index</button>
+        </div>
+        <div id="rebuild-status" style="margin-top:12px;font-size:13px;color:#888"></div>
+      </div>
+
+      <!-- Product List -->
+      <div id="page-products" class="page">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h1>Products</h1>
+          <button id="add-product-btn" class="btn-primary">+ New Product</button>
+        </div>
+        <div class="filters">
+          <input type="text" id="search-input" placeholder="Search products...">
+          <select id="label-filter">
+            <option value="">All Categories</option>
+            <option value="dress">Dress</option>
+            <option value="jacket">Jacket</option>
+            <option value="shoes">Shoes</option>
+            <option value="bag">Bag</option>
+            <option value="top">Top</option>
+            <option value="pants">Pants</option>
+            <option value="skirt">Skirt</option>
+            <option value="accessories">Accessories</option>
+          </select>
+          <button id="search-btn" class="btn-secondary">Search</button>
+        </div>
+        <div id="product-table-wrapper">
+          <table id="product-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Brand</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="product-tbody"></tbody>
+          </table>
+        </div>
+        <div id="pagination" style="margin-top:12px;text-align:center;font-size:13px;color:#888"></div>
+      </div>
+
+      <!-- Product Edit (reuses product list page area) -->
+      <div id="page-product-edit" class="page">
+        <button id="back-to-list" class="btn-secondary" style="margin-bottom:16px">← Back to Products</button>
+        <h1 id="edit-title">New Product</h1>
+        <form id="product-form" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px">
+          <div class="form-group" style="grid-column:1">
+            <label>Product Name *</label>
+            <input type="text" name="product_name" required>
+          </div>
+          <div class="form-group">
+            <label>Brand</label>
+            <input type="text" name="brand">
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select name="label">
+              <option value="">Select…</option>
+              <option value="dress">Dress</option><option value="jacket">Jacket</option>
+              <option value="shoes">Shoes</option><option value="bag">Bag</option>
+              <option value="top">Top</option><option value="pants">Pants</option>
+              <option value="skirt">Skirt</option><option value="accessories">Accessories</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Price (¥)</label>
+            <input type="number" name="price" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label>Original Price (¥)</label>
+            <input type="number" name="original_price" step="0.01" min="0">
+          </div>
+          <div class="form-group" style="grid-column:1">
+            <label>Image URL</label>
+            <input type="url" name="image_url" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label>Upload Image</label>
+            <input type="file" id="image-upload" accept="image/jpeg,image/png,image/webp">
+            <div id="upload-preview" style="margin-top:8px"></div>
+          </div>
+          <div class="form-group" style="grid-column:1 / -1">
+            <label>Description</label>
+            <textarea name="description" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Outer Material</label>
+            <input type="text" name="composition_outer" placeholder="e.g. 100% Linen">
+          </div>
+          <div class="form-group">
+            <label>Lining Material</label>
+            <input type="text" name="composition_lining" placeholder="e.g. 100% Cotton">
+          </div>
+          <div class="form-group" style="grid-column:1 / -1">
+            <label>Care Instructions</label>
+            <input type="text" name="washing_instructions" placeholder="e.g. Dry clean only">
+          </div>
+          <div class="form-group" style="grid-column:1 / -1">
+            <label>Model Info</label>
+            <input type="text" name="model_info" placeholder="e.g. Model wears size M">
+          </div>
+        </form>
+
+        <!-- Sizes -->
+        <div style="margin-top:20px;max-width:900px">
+          <h3>Size & Stock</h3>
+          <div id="sizes-container" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+          <button id="add-size-btn" class="btn-secondary" style="margin-top:8px">+ Add Size</button>
+        </div>
+
+        <div style="margin-top:24px;max-width:900px">
+          <button id="save-product-btn" class="btn-primary">Save Product</button>
+          <span id="save-status" style="margin-left:12px;font-size:13px;color:#4ade80"></span>
+        </div>
+      </div>
+
+      <!-- Orders -->
+      <div id="page-orders" class="page">
+        <h1>Orders</h1>
+        <table id="orders-table">
+          <thead>
+            <tr><th>Order No</th><th>Total</th><th>Final</th><th>Status</th><th>Date</th></tr>
+          </thead>
+          <tbody id="orders-tbody"></tbody>
+        </table>
+        <div id="orders-pagination" style="margin-top:12px;text-align:center;font-size:13px;color:#888"></div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/app/merchant/js/merchant-api.js"></script>
+  <script type="module" src="/app/merchant/js/dashboard.js"></script>
+  <script type="module" src="/app/merchant/js/product-list.js"></script>
+  <script type="module" src="/app/merchant/js/product-edit.js"></script>
+</body>
+</html>

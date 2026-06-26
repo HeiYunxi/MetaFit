@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fashion Recommender - WebXR</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <title>MateFit — Fitting Room</title>
+  <link rel="stylesheet" href="/app/css/styles.css">
 </head>
 <body>
   <div id="ui">
@@ -14,7 +14,7 @@
         <svg width="24" height="24" fill="none" stroke="#a78bfa" stroke-width="2" viewBox="0 0 24 24">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
-        <h2>Fashion Advisor</h2>
+        <h2>MateFit</h2>
       </div>
       <div id="trending-section">
         <div class="trending-title">🔥 Trending</div>
@@ -45,8 +45,7 @@
       <div id="debug-overlay" style="position:absolute;bottom:20px;left:20px;z-index:30;background:rgba(0,0,0,0.82);color:#7dd3fc;padding:10px 14px;border-radius:8px;font-size:12px;font-family:monospace;line-height:1.6;display:none;white-space:pre"></div>
       <div id="walk-hint" style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:25;background:rgba(0,0,0,0.6);color:#cbd5e1;padding:8px 16px;border-radius:20px;font-size:12px">Drag to look · WASD / arrows to walk · press <b>G</b> for calibration overlay</div>
       <div id="zone-banner" style="position:absolute;top:80px;left:50%;transform:translateX(-50%);z-index:28;background:rgba(99,102,241,0.92);color:#fff;padding:12px 24px;border-radius:24px;font-size:16px;font-weight:600;display:none;box-shadow:0 4px 20px rgba(99,102,241,0.4);transition:opacity 0.3s"></div>
-      <button id="vr-toggle-btn">Enter VR</button>
-      <button id="coin-toggle-btn" style="position:absolute;top:20px;right:240px;padding:10px 16px;border-radius:8px;border:1px solid #444;background:rgba(42,42,74,0.9);color:#fde047;font-size:13px;cursor:pointer;z-index:20;display:flex;align-items:center;gap:6px">🪙 <span id="coin-balance">0</span></button>
+      <button id="coin-toggle-btn" style="position:absolute;top:20px;right:130px;padding:10px 16px;border-radius:8px;border:1px solid #444;background:rgba(42,42,74,0.9);color:#fde047;font-size:13px;cursor:pointer;z-index:20;display:flex;align-items:center;gap:6px">🪙 <span id="coin-balance">0</span></button>
       <button id="cart-toggle-btn">🛒 Cart <span id="cart-badge">0</span></button>
       <div id="cart-panel" class="hidden">
         <h3>🛒 Your Cart</h3>
@@ -68,7 +67,7 @@
       </div>
       <div id="tryon-panel" class="panel hidden">
         <h3>Virtual Try-On</h3>
-        <p class="status">Upload a full-body photo</p>
+        <p class="status">Upload a full-body photo, or leave empty to use your saved default photo.</p>
         <input type="file" id="photo-input" accept="image/*">
         <button id="tryon-btn" class="primary" style="width:100%;margin-top:8px">Generate Try-On</button>
       </div>
@@ -110,6 +109,6 @@
     }
   }
   </script>
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="/app/js/main.js"></script>
 </body>
 </html>
