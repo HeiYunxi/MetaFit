@@ -1,4 +1,4 @@
-# MateFit — Innovation Points (Thesis)
+# MetaFit — Innovation Points (Thesis)
 
 > Systems/integration contribution with measurable evidence.  
 > Run `python backend/scripts/run_rec_eval.py` to refresh retrieval metrics in `backend/eval/results/latest.md`.
@@ -7,7 +7,7 @@
 
 ## 1. End-to-end multimodal fashion commerce loop
 
-- **Claim**: MateFit unifies *conversational recommendation → virtual try-on → image-to-3D → WebXR fitting room* in one product flow, not as isolated demos.
+- **Claim**: MetaFit unifies *conversational recommendation → virtual try-on → image-to-3D → WebXR fitting room* in one product flow, not as isolated demos.
 - **Evidence**:
   - LangGraph pipeline: `query_rewrite → check_topic → self_query_retrieve → ranker (fallback) → RAG` (`backend/src/recommender/graph.py`).
   - Try-on persists to `tryon_records` with local image URLs (`backend/src/cstImg/router.py`, `/uploads/tryon`).
@@ -54,8 +54,7 @@
 - **Claim**: Recommendations are not only a chat sidebar — users walk a 3D shop, trigger zone-based re-recommendation, and view generated avatars in-scene.
 - **Evidence**:
   - Three.js scene loads `ClothesShop_optimized.glb` (`frontend/src/js/scene.js`, `config.js`).
-  - Zone entry callbacks re-invoke recommender (`frontend/src/js/player.js`, `main.js` `window._onEnterZone`).
-  - VR toggle + model display pipeline (`frontend/src/js/ui.js` `generate3D`, `loadModel`).
+  - Zone entry callbacks re-invoke recommender; generated GLB loads in 3D Showcase (`frontend/src/js/player.js`, `ui.js` `loadModel`).
 
 ---
 
@@ -71,7 +70,7 @@
 
 ## Positioning vs. “component assembly”
 
-| Aspect | Off-the-shelf | MateFit contribution |
+| Aspect | Off-the-shelf | MetaFit contribution |
 |--------|---------------|----------------------|
 | Models | LangChain, FAISS, Tripo, Gemini image API | Orchestration graph, fallback routing, cache hot-reload |
 | Data | Farfetch CSV | MySQL SSOT + DB-driven index rebuild |
@@ -79,7 +78,7 @@
 | Evaluation | Often none | Reproducible offline retrieval benchmark (`backend/eval/`) |
 
 **Suggested thesis sentence**:  
-*We present MateFit, an integrated multimodal fashion assistant that couples hybrid RAG retrieval with virtual try-on and WebXR presentation, and demonstrate retrieval gains through offline ablation on a curated query set.*
+*We present MetaFit, an integrated multimodal fashion assistant that couples hybrid RAG retrieval with virtual try-on and WebXR presentation, and demonstrate retrieval gains through offline ablation on a curated query set.*
 
 ---
 

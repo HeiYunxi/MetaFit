@@ -6,7 +6,7 @@
 
 ---
 
-<h1 id="english" align="center">MateFit — AI Fashion E-Commerce Platform</h1>
+<h1 id="english" align="center">MetaFit — AI Fashion E-Commerce Platform</h1>
 
 <p align="center"><strong>LLM-powered fashion recommendations, virtual try-on, image-to-3D, and an immersive 3D fitting room — built for COMP5925.</strong></p>
 
@@ -22,7 +22,7 @@
 
 ## Project Overview
 
-**MateFit** is an end-to-end AI fashion shopping platform. Users browse a product catalog, chat with an AI stylist (RAG), try clothes virtually, generate 3D models, and explore everything inside a **desktop 3D fitting room**. Merchants can upload products and trigger vector index rebuilds from a dedicated portal.
+**MetaFit** is an end-to-end AI fashion shopping platform. Users browse a product catalog, chat with an AI stylist (RAG), try clothes virtually, generate 3D models, and explore everything inside a **desktop 3D fitting room**. Merchants can upload products and trigger vector index rebuilds from a dedicated portal.
 
 > **Core idea:** Use LLMs as a shopping guide, hybrid vector retrieval for product matching, and image/3D generation so users can *see themselves wearing it*.
 
@@ -51,7 +51,7 @@
 | Layer | Technologies |
 |-------|-------------|
 | **Backend** | Python 3.12, FastAPI, aiomysql |
-| **Database** | MySQL 8 (`sql/matefit.sql`) |
+| **Database** | MySQL 8 (`sql/metafit.sql`) |
 | **LLM / Vision** | GPT-4o, Gemini-2.5-flash-image (LaoZhang API proxy) |
 | **Retrieval** | FAISS, BM25, ChromaDB Self-Query, Cross-Encoder rerank |
 | **Orchestration** | LangGraph (5-node RAG workflow) |
@@ -136,7 +136,7 @@ Full interactive docs: **http://localhost:8000/docs**
 ## Project Structure
 
 ```
-MateFit/
+MetaFit/
 ├── backend/
 │   ├── src/
 │   │   ├── api/           # FastAPI routers, auth middleware
@@ -148,7 +148,7 @@ MateFit/
 │   │   ├── database.py    # MySQL pool
 │   │   └── config.py
 │   ├── scripts/
-│   │   ├── apply_schema.py          # Apply sql/matefit.sql
+│   │   ├── apply_schema.py          # Apply sql/metafit.sql
 │   │   ├── import_products_to_db.py # CSV → MySQL
 │   │   ├── rebuild_index_from_db.py # MySQL → vector indexes
 │   │   └── run_rec_eval.py          # Retrieval evaluation
@@ -162,7 +162,7 @@ MateFit/
 │       ├── merchant/      # Merchant portal
 │       ├── shared/        # Auth, API clients, nav
 │       └── js/            # Three.js scene modules
-├── sql/matefit.sql        # Complete MySQL schema
+├── sql/metafit.sql        # Complete MySQL schema
 ├── .env.example
 └── pyproject.toml
 ```
@@ -181,7 +181,7 @@ MateFit/
 
 ```bash
 git clone <repo-url>
-cd MateFit
+cd MetaFit
 cp .env.example .env   # fill in API keys and MySQL credentials
 ```
 
@@ -283,7 +283,7 @@ python backend/scripts/run_rec_eval.py
 
 ---
 
-<h1 id="chinese" align="center">MateFit — AI 时尚电商平台</h1>
+<h1 id="chinese" align="center">MetaFit — AI 时尚电商平台</h1>
 
 <p align="center"><strong>融合 LLM 推荐、虚拟试穿、图生 3D 与沉浸式 3D 试衣间的 COMP5925 毕业设计项目。</strong></p>
 
@@ -299,7 +299,7 @@ python backend/scripts/run_rec_eval.py
 
 ## 项目概述
 
-**MateFit** 是一条完整的 AI 时尚购物链路：商品浏览 → AI 对话推荐 → 虚拟试穿 → 图生 3D → 3D 试衣间体验，并支持用户账户、购物车、金币优惠券、订单，以及商户上架与向量索引重建。
+**MetaFit** 是一条完整的 AI 时尚购物链路：商品浏览 → AI 对话推荐 → 虚拟试穿 → 图生 3D → 3D 试衣间体验，并支持用户账户、购物车、金币优惠券、订单，以及商户上架与向量索引重建。
 
 > **核心思路：** 大模型当导购，混合向量检索找货，图像/3D 生成让用户「看见自己穿上」。
 
@@ -328,7 +328,7 @@ python backend/scripts/run_rec_eval.py
 | 层次 | 技术 |
 |------|------|
 | **后端** | Python 3.12、FastAPI、aiomysql |
-| **数据库** | MySQL 8（`sql/matefit.sql`） |
+| **数据库** | MySQL 8（`sql/metafit.sql`） |
 | **LLM / 图像** | GPT-4o、Gemini-2.5-flash-image（老张 API） |
 | **检索** | FAISS、BM25、ChromaDB Self-Query、Cross-Encoder |
 | **编排** | LangGraph 五节点 RAG 工作流 |
@@ -401,7 +401,7 @@ FastAPI（auth · catalog · cart · coins · coupons · orders · recommender �
 ## 项目结构
 
 ```
-MateFit/
+MetaFit/
 ├── backend/
 │   ├── src/
 │   │   ├── api/           # FastAPI 路由、认证中间件
@@ -413,7 +413,7 @@ MateFit/
 │   │   ├── database.py    # MySQL 连接池
 │   │   └── config.py      # 全局配置
 │   ├── scripts/
-│   │   ├── apply_schema.py          # 应用 sql/matefit.sql
+│   │   ├── apply_schema.py          # 应用 sql/metafit.sql
 │   │   ├── import_products_to_db.py # CSV → MySQL 商品导入
 │   │   ├── rebuild_index_from_db.py # MySQL → 向量索引重建
 │   │   └── run_rec_eval.py          # 检索离线评估
@@ -427,7 +427,7 @@ MateFit/
 │       ├── merchant/      # 商户管理后台
 │       ├── shared/        # 认证、API 客户端、导航组件
 │       └── js/            # Three.js 场景与试衣间逻辑模块
-├── sql/matefit.sql        # MySQL 完整 schema（17 张表）
+├── sql/metafit.sql        # MySQL 完整 schema（17 张表）
 ├── .env.example           # 环境变量模板
 └── pyproject.toml         # 项目依赖与工具配置
 ```
@@ -446,7 +446,7 @@ MateFit/
 
 ```bash
 git clone <repo-url>
-cd MateFit
+cd MetaFit
 cp .env.example .env   # 填写 API Key 与 MySQL 配置
 ```
 

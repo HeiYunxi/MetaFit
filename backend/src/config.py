@@ -96,12 +96,12 @@ class Settings(BaseSettings):
     MYSQL_PORT: int = int(os.environ.get("MYSQL_PORT", "3306"))
     MYSQL_USER: str = os.environ.get("MYSQL_USER", "root")
     MYSQL_PASSWORD: str = os.environ.get("MYSQL_PASSWORD", "")
-    MYSQL_DB: str = os.environ.get("MYSQL_DB", "matefit")
+    MYSQL_DB: str = os.environ.get("MYSQL_DB", "metafit")
 
     # ── JWT 认证（密钥放 .env，源码仅留开发兜底） ────────────────────────────────
     JWT_SECRET_KEY: str = os.environ.get(
         "JWT_SECRET_KEY",
-        "matefit-dev-secret-key-change-in-production",
+        "metafit-dev-secret-key-change-in-production",
     )
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15

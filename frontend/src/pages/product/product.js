@@ -34,7 +34,7 @@ function specRows(p) {
 }
 
 function render({ product: p, sizes, similar }) {
-  document.title = `${p.product_name} — MateFit`;
+  document.title = `${p.product_name} — MetaFit`;
   const sizeHtml = sizes && sizes.length
     ? `<div class="pd-section"><h3>Sizes</h3><div class="size-list">${
         sizes.map((s) => `<button class="size-pill ${s.stock_status === 'out_of_stock' ? 'out' : ''}" data-size="${s.size_label}" ${s.stock_status === 'out_of_stock' ? 'disabled' : ''}>${s.size_label}</button>`).join('')

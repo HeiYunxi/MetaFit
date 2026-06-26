@@ -1,8 +1,8 @@
 -- ===================================================================
--- MateFit — complete MySQL schema (single source of truth)
+-- MetaFit — complete MySQL schema (single source of truth)
 --
 -- Usage:
---   mysql -u root -p < sql/matefit.sql
+--   mysql -u root -p < sql/metafit.sql
 --   python backend/scripts/apply_schema.py
 --
 -- All statements use CREATE TABLE IF NOT EXISTS (idempotent).
@@ -12,10 +12,10 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
-CREATE DATABASE IF NOT EXISTS matefit
+CREATE DATABASE IF NOT EXISTS metafit
   DEFAULT CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
-USE matefit;
+USE metafit;
 
 -- -------------------------------------------------------------------
 -- 1. users

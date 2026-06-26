@@ -1,7 +1,7 @@
 """
 MySQL 异步连接池（aiomysql）。
 
-提供全局连接池的单例获取，所有后端 API 通过此模块访问 matefit 数据库。
+提供全局连接池的单例获取，所有后端 API 通过此模块访问 metafit 数据库。
 """
 
 import asyncio

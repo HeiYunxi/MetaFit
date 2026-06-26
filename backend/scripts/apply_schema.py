@@ -1,5 +1,5 @@
 """
-Apply sql/matefit.sql to MySQL (CREATE TABLE IF NOT EXISTS, idempotent).
+Apply sql/metafit.sql to MySQL (CREATE TABLE IF NOT EXISTS, idempotent).
 
 Usage: python backend/scripts/apply_schema.py
 """
@@ -13,7 +13,7 @@ import pymysql
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.config import settings  # noqa: E402
 
-SCHEMA_FILE = settings.BASE_DIR.parent / "sql" / "matefit.sql"
+SCHEMA_FILE = settings.BASE_DIR.parent / "sql" / "metafit.sql"
 
 
 def _split_statements(text: str) -> list[str]:

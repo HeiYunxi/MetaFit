@@ -1,6 +1,6 @@
 # Recommendation Evaluation
 
-Offline retrieval evaluation for the MateFit hybrid recommender.
+Offline retrieval evaluation for the MetaFit hybrid recommender.
 
 ## Quick start
 
