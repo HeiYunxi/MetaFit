@@ -29,6 +29,9 @@ docs/
 # Data — keep CSV (small text, 可版本控制), ignore indexes (large binary)
 backend/data/indexes/
 *.faiss
+# backend/eval/results/
+backend/eval/INNOVATION.md
+
 # CSV files under backend/data/ are kept — NOT ignored
 # (FashionDataset.csv 261KB, processed_data.csv 52KB)
 

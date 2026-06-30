@@ -104,13 +104,13 @@ class LaoZhangImageClient:
             person_image_base64: Base64 data URL of person full-body photo
             garment_image_base64: Base64 data URL of garment product image
             prompt: Optional custom prompt
-            use_chinese_prompt: Use Chinese prompt (better for gemini-2.5-flash-image)
+            use_chinese_prompt: When prompt is None, use DEFAULT_TRYON_PROMPT_ZH if True,
+                else DEFAULT_TRYON_PROMPT (English). Ignored when prompt is provided.
 
         Returns:
             dict with keys: success, tryon_image_url, tryon_image_base64, message
             Nano Banana returns Base64; tryon_image_base64 is set, tryon_image_url may be None.
         """
-        # 线上观察里中文 prompt 对 Nano Banana 的试穿稳定性更高，因此默认优先用中文。
         prompt = prompt or (DEFAULT_TRYON_PROMPT_ZH if use_chinese_prompt else DEFAULT_TRYON_PROMPT)
 
         content: list[dict[str, Any]] = [
@@ -177,7 +177,7 @@ class LaoZhangImageClient:
         self,
         person_image_base64: str,
         prompt: str | None = None,
-        use_chinese_prompt: bool = True,
+        use_chinese_prompt: bool = False,
     ) -> dict[str, Any]:
         """
         把任意姿势的全身照重绘为标准 T-pose，给 Tripo3D 自动绑骨做预处理。

@@ -24,26 +24,15 @@ from src.util.image_helpers import prepare_image_for_model_upload
 MODEL_UPLOAD_MAX_SIZE_MB = 0.5
 
 
-def build_tryon_prompt(
-    product_name: str = "",
-    brand: str = "",
-    label: str = "",
-    description: str = "",
-) -> str:
-    """Build an enhanced prompt with product context."""
-    parts = []
-    if product_name:
-        parts.append(f"Garment: {product_name}")
-    if brand:
-        parts.append(f"Brand: {brand}")
-    if label:
-        parts.append(f"Category: {label}")
-    if description:
-        parts.append(f"Details: {description[:200]}")
+def _metadata_contains_chinese(*fields: str) -> bool:
+    """True if any non-empty metadata field contains CJK characters."""
+    for text in fields:
+        if text and any("\u4e00" <= ch <= "\u9fff" for ch in text):
+            return True
+    return False
 
-    if not parts:
-        return ""
 
+def _build_tryon_prompt_en(parts: list[str]) -> str:
     return (
         "The first image is a full-body photo of a person. "
         "The second image is a garment/product photo. "
@@ -52,6 +41,47 @@ def build_tryon_prompt(
         "Keep face, pose, body unchanged. Preserve garment color and style. "
         "Output natural, high-quality try-on result."
     )
+
+
+def _build_tryon_prompt_zh(parts: list[str]) -> str:
+    return (
+        "第一张图是人物全身照，第二张图是服装商品图。"
+        f"商品信息：{'；'.join(parts)}。"
+        "请生成一张真实的虚拟试穿图：将第二张图中的服装穿在第一张图的人物身上。"
+        "保持人物的面部、身份、姿势和身材不变。"
+        "保留服装的颜色、款式和面料细节。"
+        "输出自然、高质量的试穿效果图。"
+    )
+
+
+def build_tryon_prompt(
+    product_name: str = "",
+    brand: str = "",
+    label: str = "",
+    description: str = "",
+) -> str:
+    """Build a product-aware try-on prompt in Chinese or English based on metadata language."""
+    use_zh = _metadata_contains_chinese(
+        product_name, brand, label, description[:200] if description else ""
+    )
+
+    parts: list[str] = []
+    if product_name:
+        parts.append(
+            f"服装：{product_name}" if use_zh else f"Garment: {product_name}"
+        )
+    if brand:
+        parts.append(f"品牌：{brand}" if use_zh else f"Brand: {brand}")
+    if label:
+        parts.append(f"品类：{label}" if use_zh else f"Category: {label}")
+    if description:
+        excerpt = description[:200]
+        parts.append(f"详情：{excerpt}" if use_zh else f"Details: {excerpt}")
+
+    if not parts:
+        return ""
+
+    return _build_tryon_prompt_zh(parts) if use_zh else _build_tryon_prompt_en(parts)
 
 
 async def run_try_on(
@@ -106,11 +136,13 @@ async def run_try_on(
         )
 
         client = LaoZhangImageClient()
+        # No metadata → English default; metadata present → product-aware prompt
+        # in Chinese or English according to metadata language.
         result = client.virtual_try_on(
             person_image_base64=person_b64,
             garment_image_base64=garment_b64,
             prompt=custom_prompt if custom_prompt else None,
-            use_chinese_prompt=True,
+            use_chinese_prompt=False,
         )
 
         return TryOnResponse(
